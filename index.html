@@ -1,140 +1,1499 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en" id="htmlRoot">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
-    <style>
-        body { font-family: Tahoma; background: #eef2f3; margin: 0; padding: 20px; color: #333; }
-        .header { background: #2c3e50; color: white; padding: 20px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center;}
-        .tabs { margin-top: 20px; display: flex; gap: 10px; }
-        .tab-btn { flex:1; padding: 15px; font-size: 16px; font-weight: bold; background: #bdc3c7; border: none; border-radius: 8px; cursor: pointer; transition: 0.3s;}
-        .tab-btn.active { background: #e74c3c; color: white; }
-        .tab-content { display: none; margin-top: 20px; }
-        .tab-content.active { display: block; }
-        
-        /* Orders Style */
-        .order-card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-right: 5px solid #e74c3c;}
-        .order-card.done { border-right-color: #27ae60; opacity: 0.7;}
-        
-        /* Menu Control Style */
-        .menu-table { width: 100%; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-collapse: collapse;}
-        .menu-table th, .menu-table td { padding: 15px; border-bottom: 1px solid #eee; text-align: center; }
-        .menu-table th { background: #34495e; color: white; }
-        .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
-        .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: #27ae60; }
-        input:checked + .slider:before { transform: translateX(26px); }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>MenuOS Pro — White-Label Restaurant Platform</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#14120F; --surface:#1E1B17; --surface-2:#26221C; --surface-3:#312B23;
+    --border:#3A3329; --text:#F5F0E6; --text-dim:#B4A996; --text-faint:#7C7264;
+    --accent:#E8A33D; --accent-dark:#C4841F; --accent-soft:rgba(232,163,61,0.14);
+    --teal:#2FB8A3; --red:#E1543F; --blue:#60A5FA; --green:#4ADE80; --purple:#B794F4;
+  }
+  html.light{
+    --bg:#F6F3EC; --surface:#FFFFFF; --surface-2:#F1ECE1; --surface-3:#E7DFCF;
+    --border:#E2D9C7; --text:#241F16; --text-dim:#6B6151; --text-faint:#9C917C;
+    --accent-soft:rgba(232,163,61,0.16);
+  }
+  *{ -webkit-tap-highlight-color: transparent; box-sizing:border-box; }
+  html,body{ background:var(--bg); }
+  body{ font-family:'Inter',sans-serif; color:var(--text); overscroll-behavior:none; transition:background .3s ease,color .3s ease; }
+  .font-display{ font-family:'Fraunces',serif; }
+  .font-mono{ font-family:'JetBrains Mono',monospace; }
+  ::-webkit-scrollbar{ width:6px; height:6px; }
+  ::-webkit-scrollbar-thumb{ background:var(--surface-3); border-radius:10px; }
+  ::-webkit-scrollbar-track{ background:transparent; }
+  .no-scrollbar::-webkit-scrollbar{ display:none; }
+  .no-scrollbar{ -ms-overflow-style:none; scrollbar-width:none; }
+  .sheet{ transition: transform .38s cubic-bezier(.32,.72,0,1), opacity .3s ease; }
+  .sheet-enter{ transform: translateY(100%); }
+  .sheet-open{ transform: translateY(0%); }
+  @keyframes pulseDot{ 0%,100%{opacity:1} 50%{opacity:.35} }
+  .pulse-dot{ animation:pulseDot 1.6s ease-in-out infinite; }
+  @keyframes floatIn{ from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:translateY(0)} }
+  .float-in{ animation:floatIn .35s cubic-bezier(.22,1,.36,1) both; }
+  @keyframes popIn{ from{opacity:0; transform:scale(.9)} to{opacity:1; transform:scale(1)} }
+  .pop-in{ animation:popIn .3s cubic-bezier(.34,1.56,.64,1) both; }
+  .qty-btn,.btn-press{ transition: transform .12s ease, background .2s ease, opacity .2s ease; }
+  .qty-btn:active,.btn-press:active{ transform:scale(.92); }
+  .item-card{ transition: transform .18s ease, border-color .2s ease; }
+  .item-card:active{ transform:scale(.985); }
+  .tab-pill{ transition: all .25s cubic-bezier(.22,1,.36,1); }
+  .tgl{ appearance:none; width:42px; height:24px; border-radius:999px; background:var(--surface-3); position:relative; cursor:pointer; transition:background .25s ease; border:1px solid var(--border); flex-shrink:0; }
+  .tgl:checked{ background:var(--accent); border-color:var(--accent); }
+  .tgl::before{ content:''; position:absolute; top:2px; left:2px; width:18px; height:18px; border-radius:999px; background:#fff; transition:transform .25s cubic-bezier(.32,.72,0,1); box-shadow:0 1px 3px rgba(0,0,0,.4); }
+  .tgl:checked::before{ transform:translateX(18px); }
+  .phone-frame{ box-shadow: 0 0 0 10px #0A0908, 0 0 0 12px #2a251d, 0 30px 80px -20px rgba(0,0,0,.7); }
+  html.light .phone-frame{ box-shadow: 0 0 0 10px #d8cfba, 0 0 0 12px #eee7d8, 0 30px 80px -20px rgba(0,0,0,.25); }
+  .status-chip{ font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:.04em; }
+  input:focus, textarea:focus, select:focus{ outline:2px solid var(--accent); outline-offset:1px; }
+  button:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  .side-link{ transition: background .2s ease, color .2s ease; }
+  .side-link.active{ background:var(--accent); color:#14120F !important; }
+  .badge{ font-size:10px; font-family:'JetBrains Mono',monospace; padding:2px 6px; border-radius:6px; }
+  @media (prefers-reduced-motion: reduce){ *{ animation-duration:0.001ms !important; transition-duration:0.001ms !important; } }
+  .scale-in{ transition: opacity .2s ease, transform .2s ease; }
+</style>
 </head>
-<body>
+<body class="min-h-screen">
 
-    <div class="header">
-        <h2>⚙️ لوحة التحكم الذكية</h2>
-        <button onclick="fetchOrders()" style="padding: 10px 20px; border-radius: 5px; cursor:pointer;">تحديث 🔄</button>
+<!-- DEBUG NAV -->
+<div class="fixed top-0 left-0 right-0 z-[100] flex justify-center pointer-events-none">
+  <div class="pointer-events-auto mt-3 flex items-center gap-1 p-1 rounded-full border shadow-2xl backdrop-blur-xl max-w-[95vw] overflow-x-auto no-scrollbar"
+       style="background:color-mix(in srgb, var(--surface-2) 88%, transparent); border-color:var(--border);">
+    <button data-screen="client" class="nav-btn btn-press px-3.5 py-2 rounded-full text-xs font-semibold font-mono tracking-wide flex items-center gap-1.5 whitespace-nowrap">📱 CLIENT</button>
+    <button data-screen="admin" class="nav-btn btn-press px-3.5 py-2 rounded-full text-xs font-semibold font-mono tracking-wide flex items-center gap-1.5 whitespace-nowrap">🛠️ ADMIN</button>
+    <div class="w-px h-5 mx-1" style="background:var(--border)"></div>
+    <button onclick="toggleTheme()" id="themeBtn" class="btn-press px-2.5 py-2 rounded-full text-xs" style="color:var(--text-dim)">🌙</button>
+    <button onclick="toggleLang()" id="langBtn" class="btn-press px-2.5 py-2 rounded-full text-xs font-mono font-semibold" style="color:var(--text-dim)">AR</button>
+  </div>
+</div>
+
+<!-- ============== SCREEN: CLIENT ============== -->
+<div id="screen-client" class="min-h-screen pt-20 pb-10 hidden">
+  <div class="max-w-md mx-auto sm:phone-frame sm:rounded-[2.5rem] sm:my-6 sm:overflow-hidden relative" style="background:var(--bg);">
+
+    <div id="installBanner" class="hidden mx-3 mt-3 rounded-2xl p-3 flex items-center gap-3 border float-in" style="background:var(--surface-2); border-color:var(--border);">
+      <div class="w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0" style="background:var(--accent-soft); color:var(--accent);">⤓</div>
+      <div class="flex-1 min-w-0">
+        <p class="text-xs font-semibold" id="installTitle">Add to Home Screen</p>
+        <p class="text-[11px] leading-tight" style="color:var(--text-dim)" id="installBody">Tap Share then "Add to Home Screen" for the full app feel.</p>
+      </div>
+      <button onclick="dismissInstallBanner()" class="text-lg leading-none px-1" style="color:var(--text-faint)">×</button>
     </div>
 
-    <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('orders', this)">🔔 الطلبات الحية</button>
-        <button class="tab-btn" onclick="switchTab('menu-control', this)">🧾 التحكم في المنيو</button>
+    <div id="closedBanner" class="hidden mx-3 mt-3 rounded-2xl p-3 flex items-center gap-2 border" style="background:rgba(225,84,63,.1); border-color:var(--red);">
+      <span class="text-lg">🕒</span>
+      <p class="text-xs font-medium" style="color:var(--red)" id="closedText">We're currently closed — you can still browse the menu.</p>
     </div>
 
-    <!-- شاشة الأوردرات -->
-    <div id="orders" class="tab-content active">
-        <div id="orders-container"><h3 style="text-align: center;">جاري التحميل...</h3></div>
+    <header class="sticky top-0 z-30 backdrop-blur-xl px-4 pt-4 pb-3" style="background:color-mix(in srgb, var(--bg) 88%, transparent);">
+      <div class="flex items-center gap-3">
+        <div id="clientLogo" class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-display font-semibold shrink-0 shadow-lg" style="background:var(--accent); color:#14120F;"></div>
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center gap-2">
+            <h1 id="clientRestName" class="font-display font-semibold text-lg leading-tight truncate"></h1>
+          </div>
+          <button onclick="openBranchPicker()" id="branchPickerBtn" class="text-xs truncate flex items-center gap-1" style="color:var(--text-dim)"></button>
+        </div>
+        <button onclick="openTrackOrder()" id="trackChip" class="hidden shrink-0 text-[10px] font-mono px-2.5 py-1.5 rounded-full border flex items-center gap-1 btn-press" style="background:var(--accent-soft); color:var(--accent); border-color:var(--accent);">
+          <span class="w-1.5 h-1.5 rounded-full pulse-dot" style="background:var(--accent)"></span> <span id="trackChipText">TRACK</span>
+        </button>
+      </div>
+
+      <!-- search -->
+      <div class="mt-3 relative">
+        <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm" style="color:var(--text-faint)">🔍</span>
+        <input id="searchInput" oninput="renderClientMenu()" placeholder="Search menu…" class="w-full rounded-xl pl-9 pr-3 py-2.5 text-sm border" style="background:var(--surface-2); border-color:var(--border); color:var(--text);">
+      </div>
+
+      <!-- order type -->
+      <div id="orderTypeTabs" class="flex gap-2 mt-3"></div>
+
+      <!-- category tabs -->
+      <div id="categoryTabs" class="flex gap-2 mt-3 overflow-x-auto no-scrollbar pb-1"></div>
+    </header>
+
+    <main id="menuList" class="px-4 pt-2 space-y-7"></main>
+    <div class="h-24"></div>
+
+    <div id="cartBar" class="hidden fixed sm:absolute bottom-4 left-0 right-0 px-4 z-40 sheet sheet-enter">
+      <button onclick="openCheckout()" class="w-full max-w-md mx-auto flex items-center justify-between rounded-2xl px-5 py-4 shadow-2xl btn-press" style="background:var(--accent); color:#14120F;">
+        <span class="flex items-center gap-2 font-semibold text-sm">
+          <span id="cartCount" class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold" style="background:#14120F; color:var(--accent);">0</span>
+          <span id="viewCartLabel">View Cart</span>
+        </span>
+        <span id="cartTotal" class="font-mono font-bold"></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Item modal -->
+<div id="itemModalBackdrop" class="hidden fixed inset-0 z-[110] opacity-0 transition-opacity duration-300" style="background:rgba(0,0,0,0.6);" onclick="closeItemModal(event)">
+  <div id="itemModalSheet" class="sheet sheet-enter absolute bottom-0 left-0 right-0 max-w-md mx-auto rounded-t-[2rem] max-h-[88vh] overflow-y-auto no-scrollbar" style="background:var(--surface);" onclick="event.stopPropagation()">
+    <div class="sticky top-0 pt-3 pb-2 flex justify-center" style="background:var(--surface)"><div class="w-10 h-1.5 rounded-full" style="background:var(--surface-3)"></div></div>
+    <div id="itemModalContent" class="px-5 pb-6"></div>
+  </div>
+</div>
+
+<!-- Checkout modal -->
+<div id="checkoutBackdrop" class="hidden fixed inset-0 z-[110] opacity-0 transition-opacity duration-300" style="background:rgba(0,0,0,0.6);" onclick="closeCheckout(event)">
+  <div id="checkoutSheet" class="sheet sheet-enter absolute bottom-0 left-0 right-0 max-w-md mx-auto rounded-t-[2rem] max-h-[92vh] overflow-y-auto no-scrollbar" style="background:var(--surface);" onclick="event.stopPropagation()">
+    <div class="sticky top-0 pt-3 pb-2 flex justify-center z-10" style="background:var(--surface)"><div class="w-10 h-1.5 rounded-full" style="background:var(--surface-3)"></div></div>
+    <div id="checkoutContent" class="px-5 pb-8"></div>
+  </div>
+</div>
+
+<!-- Track order modal -->
+<div id="trackBackdrop" class="hidden fixed inset-0 z-[115] opacity-0 transition-opacity duration-300" style="background:rgba(0,0,0,0.6);" onclick="closeTrackOrder(event)">
+  <div id="trackSheet" class="sheet sheet-enter absolute bottom-0 left-0 right-0 max-w-md mx-auto rounded-t-[2rem] max-h-[80vh] overflow-y-auto no-scrollbar" style="background:var(--surface);" onclick="event.stopPropagation()">
+    <div class="sticky top-0 pt-3 pb-2 flex justify-center" style="background:var(--surface)"><div class="w-10 h-1.5 rounded-full" style="background:var(--surface-3)"></div></div>
+    <div id="trackContent" class="px-5 pb-8"></div>
+  </div>
+</div>
+
+<!-- Branch picker -->
+<div id="branchBackdrop" class="hidden fixed inset-0 z-[116] opacity-0 transition-opacity duration-300" style="background:rgba(0,0,0,0.6);" onclick="closeBranchPicker(event)">
+  <div id="branchSheet" class="sheet sheet-enter absolute bottom-0 left-0 right-0 max-w-md mx-auto rounded-t-[2rem] max-h-[70vh] overflow-y-auto no-scrollbar" style="background:var(--surface);" onclick="event.stopPropagation()">
+    <div class="sticky top-0 pt-3 pb-2 flex justify-center" style="background:var(--surface)"><div class="w-10 h-1.5 rounded-full" style="background:var(--surface-3)"></div></div>
+    <div id="branchContent" class="px-5 pb-8"></div>
+  </div>
+</div>
+
+<div id="orderToast" class="fixed top-6 left-1/2 z-[130] transition-all duration-300 opacity-0 pointer-events-none" style="transform:translate(-50%,-30px);">
+  <div class="flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl border" style="background:var(--surface-2); border-color:var(--border);">
+    <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm" style="background:rgba(74,222,128,.15); color:#4ADE80;">✓</div>
+    <div><p class="text-sm font-semibold" id="toastTitle">Order sent!</p><p class="text-xs" style="color:var(--text-dim)" id="toastBody">Opening WhatsApp to confirm…</p></div>
+  </div>
+</div>
+<div id="miniToast" class="fixed bottom-6 left-1/2 z-[130] transition-all duration-300 opacity-0 pointer-events-none" style="transform:translate(-50%,20px);">
+  <div class="px-4 py-2.5 rounded-xl shadow-2xl border text-xs font-medium" id="miniToastText" style="background:var(--surface-2); border-color:var(--border);"></div>
+</div>
+
+<!-- ============== SCREEN: ADMIN ============== -->
+<div id="screen-admin" class="min-h-screen pt-20 pb-10 hidden">
+  <div class="max-w-[1400px] mx-auto px-3 sm:px-6 flex gap-5">
+
+    <!-- Sidebar -->
+    <aside class="hidden lg:block w-56 shrink-0">
+      <div class="rounded-2xl border p-3 sticky top-24" style="background:var(--surface); border-color:var(--border);">
+        <div class="flex items-center gap-2 px-2 py-2 mb-2">
+          <div id="adminLogo" class="w-9 h-9 rounded-lg flex items-center justify-center font-display font-semibold text-sm" style="background:var(--accent); color:#14120F;"></div>
+          <div class="min-w-0"><p class="text-sm font-semibold truncate" id="adminRestName"></p><p class="text-[10px] font-mono" style="color:var(--text-faint)">MenuOS Pro</p></div>
+        </div>
+        <div id="sidebarLinks" class="space-y-1"></div>
+      </div>
+    </aside>
+
+    <!-- mobile tab bar -->
+    <div class="lg:hidden fixed bottom-0 left-0 right-0 z-40 border-t backdrop-blur-xl px-2 py-2" style="background:color-mix(in srgb, var(--surface) 92%, transparent); border-color:var(--border);">
+      <select id="mobileTabSelect" onchange="showAdminTab(this.value)" class="w-full rounded-xl px-3 py-2.5 text-sm border font-medium" style="background:var(--surface-2); border-color:var(--border); color:var(--text);"></select>
     </div>
 
-    <!-- شاشة التحكم في المنيو -->
-    <div id="menu-control" class="tab-content">
-        <table class="menu-table">
-            <thead><tr><th>الصنف</th><th>السعر</th><th>متاح للزبائن؟</th></tr></thead>
-            <tbody id="menu-control-container"></tbody>
-        </table>
+    <!-- Main content -->
+    <div class="flex-1 min-w-0 pb-24 lg:pb-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+        <div>
+          <h1 id="adminTabTitle" class="font-display font-semibold text-2xl"></h1>
+          <p class="text-xs mt-0.5" style="color:var(--text-dim)" id="adminTabSubtitle"></p>
+        </div>
+        <div class="flex items-center gap-2 flex-wrap">
+          <select id="roleSelect" onchange="setRole(this.value)" class="text-xs font-mono px-3 py-2 rounded-xl border" style="background:var(--surface-2); border-color:var(--border); color:var(--text);">
+            <option value="Admin">👑 Admin</option>
+            <option value="Cashier">💳 Cashier</option>
+            <option value="Kitchen">🍳 Kitchen</option>
+          </select>
+          <span class="flex items-center gap-1.5 text-[11px] font-mono px-3 py-2 rounded-xl" style="background:var(--surface-2); color:#4ADE80;">
+            <span class="w-1.5 h-1.5 rounded-full pulse-dot" style="background:#4ADE80"></span> LIVE
+          </span>
+        </div>
+      </div>
+      <div id="adminContent"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   50+ FEATURE MAP (for reference):
+   Client: search, order types, QR table detect, AR/EN + RTL, dark/light,
+   favorites, ratings, badges, allergen tags, stock-aware OOS, combos,
+   meal upsell, promo codes, loyalty points, returning-customer detect,
+   delivery fee/min order logic, tax + service breakdown, payment methods,
+   scheduled orders, live order tracking, order history + reorder,
+   branch picker, open/closed hours, persistent cart, inline qty edit,
+   install banner, skeleton loading, mini toasts.
+   Admin: sidebar nav, role-based views (Admin/Cashier/Kitchen), overview
+   analytics + 7-day chart, top sellers, order-type breakdown, low-stock
+   alerts, searchable/filterable live orders, Kitchen Display Mode,
+   cancel w/ reason, print receipt, CSV export, new-order sound + badge,
+   menu CRUD incl. stock + variants, category mgmt, promo code mgmt,
+   customer CRM w/ tiers, staff + roles, branch mgmt, table mgmt (QR),
+   reviews moderation, activity log, live brand-color picker, full
+   settings (hours/tax/service/delivery/min order/currency/whatsapp).
+============================================================= */
+
+let config = {
+  restaurantName: "Ember & Oak",
+  tagline: "Smokehouse Burgers & Craft Sides",
+  logoInitials: "E&O",
+  whatsappNumber: "201001234567",
+  currency: "EGP",
+  colors: { primary: "#E8A33D", primaryDark: "#C4841F" },
+  taxRate: 0.14,
+  serviceChargeRate: 0.05,
+  deliveryFee: 25,
+  minOrder: 100,
+  workingHours: { open: "12:00", close: "23:59" },
+  defaultLang: "en"
+};
+
+const SETTINGS_KEY = 'menuos_pro_settings_v1';
+function loadSettings(){
+  try{ const raw = localStorage.getItem(SETTINGS_KEY); if(raw) config = {...config, ...JSON.parse(raw)}; }catch(e){}
+}
+function saveSettings(){ localStorage.setItem(SETTINGS_KEY, JSON.stringify(config)); }
+loadSettings();
+
+document.documentElement.style.setProperty('--accent', config.colors.primary);
+document.documentElement.style.setProperty('--accent-dark', config.colors.primaryDark);
+
+/* ---------------- i18n ---------------- */
+const LANG = {
+  en: {
+    menu:"Menu", search:"Search menu…", delivery:"Delivery", pickup:"Pickup", dinein:"Dine-in",
+    addToCart:"Add to Cart", viewCart:"View Cart", checkout:"Your Order", confirm:"Confirm Order via WhatsApp",
+    promo:"Promo code", apply:"Apply", subtotal:"Subtotal", deliveryFee:"Delivery Fee", discount:"Discount",
+    tax:"Tax", service:"Service Charge", total:"Total", track:"TRACK", outOfStock:"Out of Stock",
+    installTitle:"Add to Home Screen", installBody:"Tap Share then \"Add to Home Screen\" for the full app feel.",
+    closed:"We're currently closed — you can still browse the menu.", details:"Your Details",
+    name:"Full name", phone:"Phone number", address:"Delivery address", notes:"Order Notes (optional)",
+    payment:"Payment Method", cash:"Cash", cardOnDelivery:"Card on Delivery", wallet:"Mobile Wallet",
+    schedule:"When?", asap:"ASAP", later:"Schedule", earnPoints:"You'll earn", points:"points",
+    welcomeBack:"Welcome back!", youHave:"You have", loyaltyPts:"loyalty points", branch:"Branch",
+    table:"Table", makeItMeal:"Make it a Meal", mealDesc:"Add fries + a drink for just", favorites:"Favorites",
+    all:"All", combo:"Combos", orderSent:"Order sent!", openingWA:"Opening WhatsApp to confirm…",
+    trackTitle:"Order Tracking", orderHistory:"Order History", reorder:"Reorder", noOrders:"No previous orders yet.",
+    selectBranch:"Select Branch"
+  },
+  ar: {
+    menu:"المنيو", search:"دور في المنيو…", delivery:"دليفري", pickup:"استلام", dinein:"داخل المطعم",
+    addToCart:"ضيف للسلة", viewCart:"عرض السلة", checkout:"طلبك", confirm:"تأكيد الطلب عبر واتساب",
+    promo:"كود خصم", apply:"تفعيل", subtotal:"الإجمالي الفرعي", deliveryFee:"رسوم التوصيل", discount:"الخصم",
+    tax:"الضريبة", service:"الخدمة", total:"الإجمالي", track:"تتبع", outOfStock:"غير متوفر",
+    installTitle:"أضف للشاشة الرئيسية", installBody:"اضغط مشاركة ثم \"إضافة للشاشة الرئيسية\" لتجربة أفضل.",
+    closed:"المطعم مقفول دلوقتي — لسه تقدر تتصفح المنيو.", details:"بياناتك",
+    name:"الاسم بالكامل", phone:"رقم الموبايل", address:"عنوان التوصيل", notes:"ملاحظات (اختياري)",
+    payment:"طريقة الدفع", cash:"كاش", cardOnDelivery:"فيزا عند الاستلام", wallet:"محفظة إلكترونية",
+    schedule:"معاد الطلب", asap:"دلوقتي", later:"جدولة", earnPoints:"هتكسب", points:"نقطة",
+    welcomeBack:"أهلاً بيك تاني!", youHave:"معاك", loyaltyPts:"نقطة ولاء", branch:"الفرع",
+    table:"الطاولة", makeItMeal:"خليها وجبة", mealDesc:"ضيف بطاطس ومشروب بس بـ", favorites:"المفضلة",
+    all:"الكل", combo:"كومبوهات", orderSent:"تم إرسال الطلب!", openingWA:"جاري فتح واتساب للتأكيد…",
+    trackTitle:"تتبع الطلب", orderHistory:"طلباتي السابقة", reorder:"اطلب تاني", noOrders:"مفيش طلبات سابقة.",
+    selectBranch:"اختر الفرع"
+  }
+};
+let currentLang = localStorage.getItem('menuos_lang') || config.defaultLang || 'en';
+function t(k){ return (LANG[currentLang] && LANG[currentLang][k]) || LANG.en[k] || k; }
+function toggleLang(){
+  currentLang = currentLang === 'en' ? 'ar' : 'en';
+  localStorage.setItem('menuos_lang', currentLang);
+  document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+  document.getElementById('langBtn').textContent = currentLang === 'en' ? 'AR' : 'EN';
+  renderClientMenu(); renderCartBar();
+  if(!document.getElementById('screen-admin').classList.contains('hidden')) renderAdminShell();
+}
+
+/* ---------------- theme ---------------- */
+let currentTheme = localStorage.getItem('menuos_theme') || 'dark';
+function applyTheme(){
+  document.documentElement.classList.toggle('light', currentTheme === 'light');
+  document.getElementById('themeBtn').textContent = currentTheme === 'dark' ? '🌙' : '☀️';
+}
+function toggleTheme(){ currentTheme = currentTheme === 'dark' ? 'light' : 'dark'; localStorage.setItem('menuos_theme', currentTheme); applyTheme(); }
+
+/* ============================================================
+   MOCK DB (simulated Google Sheets via localStorage)
+============================================================= */
+const DB_KEY = 'menuos_pro_db_v1';
+const SEED = {
+  categories: [
+    { id:'combos', name:'Combos', name_ar:'كومبوهات', icon:'🎁' },
+    { id:'burgers', name:'Burgers', name_ar:'برجر', icon:'🍔' },
+    { id:'sides', name:'Sides', name_ar:'أطباق جانبية', icon:'🍟' },
+    { id:'drinks', name:'Drinks', name_ar:'مشروبات', icon:'🥤' }
+  ],
+  items: [
+    { id:'itm_c1', category:'combos', name:'Duo Feast Combo', name_ar:'كومبو الاتنين', desc:'2 Smokehouse Classic + Large Fries + 2 Drinks.', desc_ar:'٢ سموكهاوس كلاسيك + بطاطس كبيرة + ٢ مشروب.', price:340, active:true, stock:22, lowStock:5, rating:4.8, reviewCount:96, badges:['Combo','Bestseller'], allergens:['gluten'], options:[] },
+    { id:'itm_01', category:'burgers', name:'Smokehouse Classic', name_ar:'سموكهاوس كلاسيك', desc:'Charred beef patty, smoked cheddar, pickles, house BBQ sauce, brioche bun.', desc_ar:'قطعة لحم مشوية، جبنة تشيدر مدخنة، مخلل، صوص باربكيو، خبز بريوش.', price:185, active:true, stock:40, lowStock:8, rating:4.9, reviewCount:212, badges:['Bestseller'],
+      options:[ {name:'Patty',type:'radio',choices:[{label:'Single',delta:0},{label:'Double',delta:60}]}, {name:'Style',type:'radio',choices:[{label:'Fried',delta:0},{label:'Grilled',delta:0}]}, {name:'Extras',type:'checkbox',choices:[{label:'Extra Cheese',delta:15},{label:'Extra Sauce',delta:5}]} ] },
+    { id:'itm_02', category:'burgers', name:'Spicy Jalapeño Melt', name_ar:'سبايسي جالابينو', desc:'Pepper-jack cheese, pickled jalapeños, chipotle mayo, toasted sesame bun.', desc_ar:'جبنة بيبرجاك، جالابينو مخلل، مايونيز تشيبوتلي.', price:175, active:true, stock:6, lowStock:8, rating:4.6, reviewCount:74, badges:['Spicy'],
+      options:[ {name:'Patty',type:'radio',choices:[{label:'Single',delta:0},{label:'Double',delta:60}]}, {name:'Extras',type:'checkbox',choices:[{label:'Extra Cheese',delta:15},{label:'Extra Jalapeños',delta:8}]} ] },
+    { id:'itm_03', category:'burgers', name:'Mushroom Swiss', name_ar:'ماشروم سويس', desc:'Sautéed wild mushrooms, melted swiss, truffle aioli, garlic butter bun.', desc_ar:'مشروم بري، جبنة سويسري، صوص الترافل.', price:190, active:false, stock:0, lowStock:5, rating:4.7, reviewCount:41, badges:['New'],
+      options:[ {name:'Patty',type:'radio',choices:[{label:'Single',delta:0},{label:'Double',delta:60}]} ] },
+    { id:'itm_04', category:'sides', name:'Truffle Parmesan Fries', name_ar:'بطاطس ترافل بارميزان', desc:'Hand-cut fries tossed in truffle oil, parmesan and fresh herbs.', desc_ar:'بطاطس مقرمشة بزيت الترافل والبارميزان.', price:65, active:true, stock:50, lowStock:10, rating:4.8, reviewCount:130, badges:['Vegetarian'], allergens:['dairy'],
+      options:[ {name:'Size',type:'radio',choices:[{label:'Regular',delta:0},{label:'Large',delta:20}]} ] },
+    { id:'itm_05', category:'sides', name:'Crispy Onion Rings', name_ar:'حلقات بصل مقرمشة', desc:'Beer-battered onion rings, smoked paprika aioli.', desc_ar:'حلقات بصل مقرمشة مع صوص البابريكا.', price:55, active:true, stock:35, lowStock:8, rating:4.5, reviewCount:58, badges:['Vegetarian'],
+      options:[ {name:'Size',type:'radio',choices:[{label:'Regular',delta:0},{label:'Large',delta:15}]} ] },
+    { id:'itm_06', category:'sides', name:'Loaded Cheese Fries', name_ar:'بطاطس تشيز لودد', desc:'Fries, melted cheddar, bacon bits, jalapeños, ranch drizzle.', desc_ar:'بطاطس بالجبنة والبيكون والجالابينو.', price:75, active:true, stock:3, lowStock:8, rating:4.7, reviewCount:47, badges:[], options:[] },
+    { id:'itm_07', category:'drinks', name:'Fresh Lemon Mint', name_ar:'ليمون بالنعناع', desc:'Muddled mint, fresh lemon, soda, house syrup.', desc_ar:'نعناع طازة وليمون وصودا.', price:45, active:true, stock:60, lowStock:10, rating:4.9, reviewCount:88, badges:['Vegan'], options:[] },
+    { id:'itm_08', category:'drinks', name:'Craft Root Beer Float', name_ar:'روت بير فلوت', desc:'House root beer, vanilla bean ice cream.', desc_ar:'روت بير مع آيس كريم فانيليا.', price:55, active:true, stock:25, lowStock:8, rating:4.6, reviewCount:33, badges:[], options:[] },
+    { id:'itm_09', category:'drinks', name:'Iced Caramel Latte', name_ar:'أيسد كراميل لاتيه', desc:'Double espresso, cold milk, salted caramel.', desc_ar:'اسبريسو مضاعف مع كراميل مملح.', price:60, active:false, stock:0, lowStock:8, rating:4.8, reviewCount:19, badges:[], options:[] }
+  ],
+  orders: [],
+  promoCodes: [
+    { id:'p1', code:'WELCOME10', type:'percent', value:10, active:true },
+    { id:'p2', code:'SAVE30', type:'fixed', value:30, active:true }
+  ],
+  staff: [
+    { id:'s1', name:'Ahmed Youssef', role:'Admin', active:true },
+    { id:'s2', name:'Nourhan Adel', role:'Cashier', active:true },
+    { id:'s3', name:'Mostafa Reda', role:'Kitchen', active:true }
+  ],
+  branches: [
+    { id:'b1', name:'Zamalek', address:'26 July St, Zamalek, Cairo', hours:'12:00 – 01:00', active:true },
+    { id:'b2', name:'New Cairo', address:'90th Street, New Cairo', hours:'12:00 – 00:00', active:true },
+    { id:'b3', name:'Alexandria', address:'Corniche Rd, Alexandria', hours:'13:00 – 00:00', active:false }
+  ],
+  tables: Array.from({length:10}, (_,i) => ({ id:'t'+(i+1), number:i+1, status: i%4===0 ? 'occupied' : 'free' })),
+  reviews: [
+    { id:'r1', itemId:'itm_01', customerName:'Salma H.', rating:5, comment:'Best burger in town, incredibly juicy.', approved:true },
+    { id:'r2', itemId:'itm_02', customerName:'Omar K.', rating:4, comment:'Great kick of spice, will order again.', approved:true },
+    { id:'r3', itemId:'itm_04', customerName:'Yara M.', rating:5, comment:'Truffle fries are addictive!', approved:false }
+  ],
+  activityLog: []
+};
+
+function loadDB(){
+  try{ const raw = localStorage.getItem(DB_KEY); if(!raw){ localStorage.setItem(DB_KEY, JSON.stringify(SEED)); return structuredClone(SEED); } return JSON.parse(raw); }
+  catch(e){ localStorage.setItem(DB_KEY, JSON.stringify(SEED)); return structuredClone(SEED); }
+}
+function saveDB(db){ localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+function logActivity(text){ const db = loadDB(); db.activityLog.unshift({ id: uid('log'), ts: Date.now(), text }); db.activityLog = db.activityLog.slice(0,80); saveDB(db); }
+
+const delay = (ms) => new Promise(r => setTimeout(r, ms));
+
+const MockAPI = {
+  async getMenu(){ await delay(220); const db = loadDB(); return { categories: db.categories, items: db.items }; },
+  async getOrders(){ await delay(180); return loadDB().orders.slice().sort((a,b)=>b.ts-a.ts); },
+  async postOrder(order){ await delay(420); const db = loadDB(); db.orders.unshift(order); saveDB(db); logActivity(`New order ${order.id} placed by ${order.customer.name} (${fmt(order.total)})`); return { ok:true }; },
+  async toggleItemActive(id, active){ await delay(160); const db = loadDB(); const it = db.items.find(i=>i.id===id); if(it) it.active = active; saveDB(db); logActivity(`${it?.name || id} marked ${active?'Active':'Inactive'}`); return {ok:true}; },
+  async updateItemPrice(id, price){ await delay(160); const db = loadDB(); const it = db.items.find(i=>i.id===id); if(it) it.price = price; saveDB(db); logActivity(`Price of ${it?.name || id} updated to ${fmt(price)}`); return {ok:true}; },
+  async updateItemStock(id, stock){ await delay(160); const db = loadDB(); const it = db.items.find(i=>i.id===id); if(it) it.stock = stock; saveDB(db); return {ok:true}; },
+  async updateOrderStatus(id, status, reason){ await delay(160); const db = loadDB(); const o = db.orders.find(o=>o.id===id); if(o){ o.status = status; if(reason) o.cancelReason = reason; } saveDB(db); logActivity(`Order ${id} → ${status}`); return {ok:true}; },
+  async addPromo(promo){ await delay(160); const db = loadDB(); db.promoCodes.unshift(promo); saveDB(db); logActivity(`Promo code ${promo.code} created`); return {ok:true}; },
+  async togglePromo(id, active){ await delay(120); const db = loadDB(); const p = db.promoCodes.find(p=>p.id===id); if(p) p.active = active; saveDB(db); return {ok:true}; },
+  async deletePromo(id){ await delay(120); const db = loadDB(); db.promoCodes = db.promoCodes.filter(p=>p.id!==id); saveDB(db); return {ok:true}; },
+  async addStaff(person){ await delay(160); const db = loadDB(); db.staff.unshift(person); saveDB(db); logActivity(`Staff member ${person.name} added as ${person.role}`); return {ok:true}; },
+  async toggleStaff(id, active){ await delay(120); const db = loadDB(); const s = db.staff.find(s=>s.id===id); if(s) s.active = active; saveDB(db); return {ok:true}; },
+  async toggleBranch(id, active){ await delay(120); const db = loadDB(); const b = db.branches.find(b=>b.id===id); if(b) b.active = active; saveDB(db); return {ok:true}; },
+  async addBranch(branch){ await delay(160); const db = loadDB(); db.branches.unshift(branch); saveDB(db); return {ok:true}; },
+  async toggleTable(id){ await delay(100); const db = loadDB(); const tb = db.tables.find(t=>t.id===id); if(tb) tb.status = tb.status==='free' ? 'occupied' : 'free'; saveDB(db); return {ok:true}; },
+  async toggleReview(id, approved){ await delay(120); const db = loadDB(); const r = db.reviews.find(r=>r.id===id); if(r) r.approved = approved; saveDB(db); return {ok:true}; },
+  async getAll(){ await delay(100); return loadDB(); }
+};
+
+/* ============================================================
+   STATE
+============================================================= */
+const CART_KEY = 'menuos_pro_cart_v1';
+let state = {
+  categories: [], items: [],
+  activeCategory: 'all',
+  cart: JSON.parse(localStorage.getItem(CART_KEY) || '[]'),
+  currentModalItem: null,
+  orderType: 'Delivery',
+  activeBranch: 'b1',
+  favorites: JSON.parse(localStorage.getItem('menuos_favs') || '[]'),
+  showFavoritesOnly: false,
+  tableNumber: new URLSearchParams(location.search).get('table') || null,
+  role: 'Admin',
+  adminTab: 'overview'
+};
+if(state.tableNumber) state.orderType = 'Dine-in';
+
+const ORDER_STATUSES = ['Pending','Preparing','Out for Delivery','Delivered','Cancelled'];
+const STATUS_COLORS = {
+  'Pending':{bg:'rgba(232,163,61,.15)',fg:'var(--accent)'}, 'Preparing':{bg:'rgba(47,184,163,.15)',fg:'var(--teal)'},
+  'Out for Delivery':{bg:'rgba(96,165,250,.15)',fg:'var(--blue)'}, 'Delivered':{bg:'rgba(74,222,128,.15)',fg:'var(--green)'},
+  'Cancelled':{bg:'rgba(225,84,63,.15)',fg:'var(--red)'}
+};
+const BADGE_COLORS = { 'Bestseller':'var(--accent)', 'New':'var(--teal)', 'Spicy':'var(--red)', 'Combo':'var(--purple)', 'Vegetarian':'var(--green)', 'Vegan':'var(--green)' };
+
+const fmt = (n) => `${Number(n).toFixed(0)} ${config.currency}`;
+const uid = (p='id') => `${p}_${Date.now().toString(36)}${Math.random().toString(36).slice(2,6)}`;
+function persistCart(){ localStorage.setItem(CART_KEY, JSON.stringify(state.cart)); }
+function persistFavs(){ localStorage.setItem('menuos_favs', JSON.stringify(state.favorites)); }
+
+function miniToast(msg){
+  const el = document.getElementById('miniToast'); document.getElementById('miniToastText').textContent = msg;
+  el.style.opacity = '1'; el.style.transform = 'translate(-50%,0)';
+  clearTimeout(window._mt); window._mt = setTimeout(()=>{ el.style.opacity='0'; el.style.transform='translate(-50%,20px)'; }, 2200);
+}
+function playBeep(){
+  try{
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    const o = ctx.createOscillator(); const g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination); o.type='sine'; o.frequency.value=880;
+    g.gain.setValueAtTime(0.06, ctx.currentTime); o.start(); o.stop(ctx.currentTime+0.15);
+  }catch(e){}
+}
+
+/* ============================================================
+   BRANDING / INIT
+============================================================= */
+function applyBranding(){
+  document.getElementById('clientLogo').textContent = config.logoInitials;
+  document.getElementById('clientRestName').textContent = config.restaurantName;
+  document.getElementById('adminLogo').textContent = config.logoInitials;
+  document.getElementById('adminRestName').textContent = config.restaurantName;
+  document.title = `${config.restaurantName} — MenuOS Pro`;
+  document.getElementById('installTitle').textContent = t('installTitle');
+  document.getElementById('installBody').textContent = t('installBody');
+  document.getElementById('closedText').textContent = t('closed');
+  document.getElementById('searchInput').placeholder = t('search');
+  document.getElementById('viewCartLabel').textContent = t('viewCart');
+  document.getElementById('trackChipText').textContent = t('track');
+}
+
+function isOpenNow(){
+  const [oh,om] = config.workingHours.open.split(':').map(Number);
+  const [ch,cm] = config.workingHours.close.split(':').map(Number);
+  const now = new Date(); const mins = now.getHours()*60+now.getMinutes();
+  const openMins = oh*60+om, closeMins = ch*60+cm;
+  return closeMins > openMins ? (mins >= openMins && mins <= closeMins) : true;
+}
+
+function setScreen(name){
+  document.getElementById('screen-client').classList.toggle('hidden', name !== 'client');
+  document.getElementById('screen-admin').classList.toggle('hidden', name !== 'admin');
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    const active = btn.dataset.screen === name;
+    btn.style.background = active ? 'var(--accent)' : 'transparent';
+    btn.style.color = active ? '#14120F' : 'var(--text-dim)';
+  });
+  localStorage.setItem('menuos_demo_screen', name);
+  if(name === 'client') renderClientMenu();
+  if(name === 'admin') renderAdminShell();
+}
+document.querySelectorAll('.nav-btn').forEach(btn => btn.addEventListener('click', () => setScreen(btn.dataset.screen)));
+
+/* ============================================================
+   CLIENT: ORDER TYPE + CATEGORY TABS
+============================================================= */
+function renderOrderTypeTabs(){
+  const types = [
+    {id:'Delivery', label:t('delivery'), icon:'🛵'},
+    {id:'Pickup', label:t('pickup'), icon:'🏠'},
+    {id:'Dine-in', label:t('dinein'), icon:'🍽️'}
+  ];
+  document.getElementById('orderTypeTabs').innerHTML = types.map(ty => `
+    <button onclick="setOrderType('${ty.id}')" class="tab-pill btn-press flex-1 px-2 py-2 rounded-xl text-xs font-semibold border flex items-center justify-center gap-1"
+      style="${state.orderType===ty.id ? `background:var(--accent);color:#14120F;border-color:var(--accent);` : `background:var(--surface-2);color:var(--text-dim);border-color:var(--border);`}">
+      ${ty.icon} ${ty.label}
+    </button>`).join('');
+}
+function setOrderType(id){ state.orderType = id; renderOrderTypeTabs(); }
+
+async function renderClientMenu(){
+  applyBranding();
+  document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+  document.getElementById('langBtn').textContent = currentLang === 'en' ? 'AR' : 'EN';
+
+  const menu = await MockAPI.getMenu();
+  state.categories = menu.categories; state.items = menu.items;
+
+  document.getElementById('closedBanner').classList.toggle('hidden', isOpenNow());
+
+  const branches = (await MockAPI.getAll()).branches;
+  const branch = branches.find(b => b.id === state.activeBranch) || branches[0];
+  document.getElementById('branchPickerBtn').innerHTML = `📍 ${branch.name} <span style="color:var(--text-faint)">▾</span>`;
+
+  renderOrderTypeTabs();
+
+  const tabsEl = document.getElementById('categoryTabs');
+  const cats = [{id:'all', name:t('all'), name_ar:t('all'), icon:'✨'}, {id:'favorites', name:t('favorites'), name_ar:t('favorites'), icon:'❤️'}, ...state.categories];
+  tabsEl.innerHTML = cats.map(c => `
+    <button class="tab-pill btn-press whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium border"
+      style="${state.activeCategory === c.id ? `background:var(--accent); color:#14120F; border-color:var(--accent);` : `background:var(--surface-2); color:var(--text-dim); border-color:var(--border);`}"
+      onclick="setActiveCategory('${c.id}')">${c.icon} ${currentLang==='ar' ? (c.name_ar||c.name) : c.name}</button>
+  `).join('');
+
+  const q = (document.getElementById('searchInput').value || '').trim().toLowerCase();
+  let items = state.items;
+  if(q) items = items.filter(i => (i.name+' '+i.desc).toLowerCase().includes(q));
+  if(state.activeCategory === 'favorites') items = items.filter(i => state.favorites.includes(i.id));
+  else if(state.activeCategory !== 'all') items = items.filter(i => i.category === state.activeCategory);
+
+  const listEl = document.getElementById('menuList');
+  if(items.length === 0){
+    listEl.innerHTML = `<div class="text-center py-16"><p class="text-4xl mb-3">🔎</p><p class="text-sm" style="color:var(--text-dim)">No items found.</p></div>`;
+  } else if(state.activeCategory === 'all' && !q){
+    listEl.innerHTML = state.categories.map(cat => {
+      const catItems = state.items.filter(i => i.category === cat.id);
+      if(catItems.length === 0) return '';
+      return `<div><h2 class="font-display font-semibold text-base mb-3">${cat.icon} ${currentLang==='ar'?(cat.name_ar||cat.name):cat.name}</h2><div class="space-y-3">${catItems.map(renderItemCard).join('')}</div></div>`;
+    }).join('');
+  } else {
+    listEl.innerHTML = `<div class="space-y-3">${items.map(renderItemCard).join('')}</div>`;
+  }
+
+  renderCartBar();
+  maybeShowInstallBanner();
+  refreshTrackChip();
+}
+
+function renderItemCard(item){
+  const outOfStock = !item.active || item.stock <= 0;
+  const isFav = state.favorites.includes(item.id);
+  const name = currentLang==='ar' && item.name_ar ? item.name_ar : item.name;
+  const desc = currentLang==='ar' && item.desc_ar ? item.desc_ar : item.desc;
+  const lowStock = item.active && item.stock > 0 && item.stock <= item.lowStock;
+  return `
+    <div class="item-card rounded-2xl border p-4 flex gap-3 ${outOfStock ? 'opacity-50' : 'cursor-pointer'}"
+      style="background:var(--surface); border-color:var(--border);" ${outOfStock ? '' : `onclick="openItemModal('${item.id}')"`}>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-1.5 mb-1 flex-wrap">
+          <h3 class="font-semibold text-sm">${name}</h3>
+          ${(item.badges||[]).map(b => `<span class="badge" style="background:color-mix(in srgb, ${BADGE_COLORS[b]||'var(--accent)'} 18%, transparent); color:${BADGE_COLORS[b]||'var(--accent)'};">${b}</span>`).join('')}
+        </div>
+        <p class="text-xs leading-snug mb-2 line-clamp-2" style="color:var(--text-dim)">${desc}</p>
+        <div class="flex items-center gap-2 mb-1.5">
+          <span class="font-mono font-semibold text-sm" style="color:var(--accent)">${fmt(item.price)}</span>
+          <span class="text-[11px] flex items-center gap-0.5" style="color:var(--text-faint)">⭐ ${item.rating} <span class="opacity-70">(${item.reviewCount})</span></span>
+        </div>
+        ${lowStock ? `<span class="status-chip px-1.5 py-0.5 rounded" style="background:rgba(225,84,63,.12); color:var(--red)">Only ${item.stock} left</span>` : ''}
+      </div>
+      <div class="flex flex-col items-center justify-between shrink-0">
+        <button onclick="event.stopPropagation(); toggleFavorite('${item.id}')" class="btn-press text-lg">${isFav ? '❤️' : '🤍'}</button>
+        <div class="w-16 h-16 rounded-xl flex items-center justify-center text-2xl" style="background:var(--surface-2)">🍽️</div>
+        ${outOfStock
+          ? `<span class="status-chip mt-2 px-2 py-1 rounded-md text-center" style="background:rgba(225,84,63,.15); color:var(--red);">${t('outOfStock').toUpperCase()}</span>`
+          : `<button onclick="event.stopPropagation(); openItemModal('${item.id}')" class="qty-btn w-8 h-8 rounded-full flex items-center justify-center text-lg font-bold mt-2" style="background:var(--accent); color:#14120F;">+</button>`
+        }
+      </div>
+    </div>`;
+}
+
+function setActiveCategory(id){ state.activeCategory = id; renderClientMenu(); }
+function toggleFavorite(id){ state.favorites = state.favorites.includes(id) ? state.favorites.filter(f=>f!==id) : [...state.favorites, id]; persistFavs(); renderClientMenu(); }
+function dismissInstallBanner(){ document.getElementById('installBanner').classList.add('hidden'); sessionStorage.setItem('menuos_install_dismissed','1'); }
+function maybeShowInstallBanner(){ if(!sessionStorage.getItem('menuos_install_dismissed')) document.getElementById('installBanner').classList.remove('hidden'); }
+
+/* ---------------- branch picker ---------------- */
+async function openBranchPicker(){
+  const db = await MockAPI.getAll();
+  document.getElementById('branchContent').innerHTML = `
+    <h2 class="font-display font-semibold text-xl mb-4">${t('selectBranch')}</h2>
+    <div class="space-y-2">
+      ${db.branches.filter(b=>b.active).map(b => `
+        <button onclick="chooseBranch('${b.id}')" class="w-full text-left rounded-xl p-3.5 border flex items-center gap-3 btn-press"
+          style="background:${state.activeBranch===b.id?'var(--accent-soft)':'var(--surface-2)'}; border-color:${state.activeBranch===b.id?'var(--accent)':'var(--border)'};">
+          <span class="text-xl">📍</span>
+          <div class="flex-1"><p class="text-sm font-semibold">${b.name}</p><p class="text-xs" style="color:var(--text-dim)">${b.address} · ${b.hours}</p></div>
+          ${state.activeBranch===b.id ? '<span style="color:var(--accent)">✓</span>' : ''}
+        </button>`).join('')}
+    </div>`;
+  openSheet('branchBackdrop','branchSheet');
+}
+function chooseBranch(id){ state.activeBranch = id; closeBranchPicker(); renderClientMenu(); }
+function closeBranchPicker(e){ if(e && e.target !== e.currentTarget) return; closeSheet('branchBackdrop','branchSheet'); }
+
+/* ---------------- generic sheet helpers ---------------- */
+function openSheet(backdropId, sheetId){
+  const backdrop = document.getElementById(backdropId), sheet = document.getElementById(sheetId);
+  backdrop.classList.remove('hidden');
+  requestAnimationFrame(() => { backdrop.style.opacity='1'; sheet.classList.remove('sheet-enter'); sheet.classList.add('sheet-open'); });
+}
+function closeSheet(backdropId, sheetId){
+  const backdrop = document.getElementById(backdropId), sheet = document.getElementById(sheetId);
+  backdrop.style.opacity='0'; sheet.classList.remove('sheet-open'); sheet.classList.add('sheet-enter');
+  setTimeout(() => backdrop.classList.add('hidden'), 350);
+}
+
+/* ============================================================
+   ITEM MODAL
+============================================================= */
+let modalSelections = {}, modalQty = 1, modalMeal = false;
+function openItemModal(itemId){
+  const item = state.items.find(i => i.id === itemId);
+  if(!item || !item.active || item.stock <= 0) return;
+  state.currentModalItem = item; modalSelections = {}; modalQty = 1; modalMeal = false;
+  item.options?.forEach(opt => { modalSelections[opt.name] = opt.type==='radio' ? opt.choices[0].label : []; });
+  renderItemModal();
+  openSheet('itemModalBackdrop','itemModalSheet');
+}
+function closeItemModal(e){ if(e && e.target !== e.currentTarget) return; closeSheet('itemModalBackdrop','itemModalSheet'); }
+
+function calcModalUnitPrice(){
+  const item = state.currentModalItem; let price = item.price;
+  item.options?.forEach(opt => {
+    if(opt.type === 'radio'){ const c = opt.choices.find(c => c.label === modalSelections[opt.name]); if(c) price += c.delta; }
+    else { (modalSelections[opt.name]||[]).forEach(label => { const c = opt.choices.find(c=>c.label===label); if(c) price += c.delta; }); }
+  });
+  return price;
+}
+
+function renderItemModal(){
+  const item = state.currentModalItem;
+  const unitPrice = calcModalUnitPrice(); const mealAddon = 40;
+  const total = (unitPrice * modalQty) + (modalMeal ? mealAddon : 0);
+  const name = currentLang==='ar' && item.name_ar ? item.name_ar : item.name;
+  const desc = currentLang==='ar' && item.desc_ar ? item.desc_ar : item.desc;
+  const reviews = [];
+
+  document.getElementById('itemModalContent').innerHTML = `
+    <div class="w-full h-40 rounded-2xl flex items-center justify-center text-6xl mb-4" style="background:var(--surface-2)">🍽️</div>
+    <div class="flex items-start justify-between gap-2 mb-1">
+      <h2 class="font-display font-semibold text-xl">${name}</h2>
+      <span class="text-xs shrink-0 flex items-center gap-1 mt-1" style="color:var(--text-faint)">⭐ ${item.rating} (${item.reviewCount})</span>
+    </div>
+    <p class="text-sm mb-3" style="color:var(--text-dim)">${desc}</p>
+    ${(item.allergens && item.allergens.length) ? `<div class="flex gap-1.5 mb-4 flex-wrap">${item.allergens.map(a=>`<span class="badge" style="background:var(--surface-2); color:var(--text-faint)">⚠ ${a}</span>`).join('')}</div>` : '<div class="mb-4"></div>'}
+
+    ${(item.options||[]).map(opt => `
+      <div class="mb-5">
+        <p class="text-xs font-mono uppercase tracking-wide mb-2" style="color:var(--text-faint)">${opt.name}</p>
+        <div class="flex flex-wrap gap-2">
+          ${opt.choices.map(c => {
+            const selected = opt.type==='radio' ? modalSelections[opt.name]===c.label : (modalSelections[opt.name]||[]).includes(c.label);
+            return `<button onclick="toggleOption('${opt.name}', '${c.label.replace(/'/g,"\\'")}', '${opt.type}')" class="btn-press px-3.5 py-2 rounded-xl text-xs font-medium border flex items-center gap-1.5"
+              style="${selected ? `background:var(--accent); color:#14120F; border-color:var(--accent);` : `background:var(--surface-2); color:var(--text-dim); border-color:var(--border);`}">
+              ${c.label} ${c.delta ? `<span class="font-mono opacity-80">+${c.delta}</span>` : ''}</button>`;
+          }).join('')}
+        </div>
+      </div>`).join('')}
+
+    <button onclick="toggleMeal()" class="w-full text-left rounded-2xl p-4 mb-5 border flex items-center gap-3 btn-press"
+      style="background:${modalMeal ? 'var(--accent-soft)' : 'var(--surface-2)'}; border-color:${modalMeal ? 'var(--accent)' : 'var(--border)'};">
+      <span class="text-2xl">🥤🍟</span>
+      <div class="flex-1"><p class="text-sm font-semibold">${t('makeItMeal')}</p><p class="text-xs" style="color:var(--text-dim)">${t('mealDesc')} <span class="font-mono" style="color:var(--accent)">+${mealAddon} ${config.currency}</span></p></div>
+      <div class="w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0" style="border-color:${modalMeal ? 'var(--accent)' : 'var(--border)'}; background:${modalMeal ? 'var(--accent)' : 'transparent'};">${modalMeal ? '<span style="color:#14120F; font-size:12px;">✓</span>' : ''}</div>
+    </button>
+
+    <div class="flex items-center justify-between mb-6">
+      <span class="text-sm font-medium">Quantity</span>
+      <div class="flex items-center gap-3">
+        <button onclick="changeQty(-1)" class="qty-btn w-9 h-9 rounded-full flex items-center justify-center text-lg font-bold" style="background:var(--surface-2); color:var(--text)">–</button>
+        <span class="font-mono font-semibold w-6 text-center">${modalQty}</span>
+        <button onclick="changeQty(1)" class="qty-btn w-9 h-9 rounded-full flex items-center justify-center text-lg font-bold" style="background:var(--surface-2); color:var(--text)">+</button>
+      </div>
     </div>
 
-    <!-- صوت الجرس -->
-    <audio id="ring" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
+    <button onclick="addToCart()" class="w-full rounded-2xl py-4 font-semibold flex items-center justify-center gap-2 btn-press shadow-xl" style="background:var(--accent); color:#14120F;">
+      ${t('addToCart')} <span class="font-mono">· ${fmt(total)}</span>
+    </button>`;
+}
+function toggleOption(optName, label, type){
+  if(type === 'radio') modalSelections[optName] = label;
+  else { const arr = modalSelections[optName]||[]; modalSelections[optName] = arr.includes(label) ? arr.filter(l=>l!==label) : [...arr, label]; }
+  renderItemModal();
+}
+function toggleMeal(){ modalMeal = !modalMeal; renderItemModal(); }
+function changeQty(d){ modalQty = Math.max(1, modalQty + d); renderItemModal(); }
+function addToCart(){
+  const item = state.currentModalItem; const unitPrice = calcModalUnitPrice();
+  const optionsSummary = Object.entries(modalSelections).map(([k,v]) => Array.isArray(v)?v.join(', '):v).filter(Boolean).join(' · ');
+  state.cart.push({ cartId: uid('cart'), itemId: item.id, name: item.name, qty: modalQty, unitPrice, optionsSummary, isMeal: modalMeal, mealAddon: modalMeal?40:0 });
+  persistCart(); closeItemModal(); renderCartBar(); bounceCart(); miniToast(`${item.name} added to cart`);
+}
+function bounceCart(){ const bar = document.getElementById('cartBar'); bar.style.transform='scale(1.03)'; setTimeout(()=>bar.style.transform='scale(1)',160); }
 
-    <script>
-        // ⚠️ حط لينك الـ Web App بتاعك هنا
-        const API_URL = "https://script.google.com/macros/s/AKfycbz63wegGtUvTXD1qWPLM_UV1w_hW24jebpz350MvMjsx_kBCuXLILQyF1NHvek8bcLvhA/exec"; 
-        let lastOrderCount = 0;
+/* ============================================================
+   CART BAR + CHECKOUT
+============================================================= */
+function cartTotals(){
+  const count = state.cart.reduce((s,c)=>s+c.qty,0);
+  const subtotal = state.cart.reduce((s,c)=>s+(c.unitPrice*c.qty)+c.mealAddon,0);
+  return { count, subtotal };
+}
+function renderCartBar(){
+  const { count, subtotal } = cartTotals();
+  const bar = document.getElementById('cartBar');
+  if(count === 0){ bar.classList.add('hidden'); return; }
+  bar.classList.remove('hidden'); requestAnimationFrame(()=>bar.classList.remove('sheet-enter'));
+  document.getElementById('cartCount').textContent = count;
+  document.getElementById('cartTotal').textContent = fmt(subtotal);
+}
+function openCheckout(){ renderCheckout(); openSheet('checkoutBackdrop','checkoutSheet'); }
+function closeCheckout(e){ if(e && e.target !== e.currentTarget) return; closeSheet('checkoutBackdrop','checkoutSheet'); }
+function changeCartQty(cartId, d){
+  const line = state.cart.find(c=>c.cartId===cartId); if(!line) return;
+  line.qty = Math.max(1, line.qty + d); persistCart(); renderCheckout(); renderCartBar();
+}
+function removeFromCart(cartId){
+  state.cart = state.cart.filter(c=>c.cartId!==cartId); persistCart(); renderCheckout(); renderCartBar();
+  if(state.cart.length === 0) closeCheckout();
+}
 
-        function switchTab(id, btn) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            btn.classList.add('active');
-            if(id === 'menu-control') fetchAdminMenu();
-        }
+let appliedPromo = null;
+function applyPromoCode(){
+  const code = document.getElementById('promoInput').value.trim().toUpperCase();
+  loadDB().promoCodes.find; // noop guard
+  const db = loadDB();
+  const promo = db.promoCodes.find(p => p.code === code && p.active);
+  const msgEl = document.getElementById('promoMsg');
+  if(!promo){ appliedPromo = null; msgEl.textContent = 'Invalid or expired code.'; msgEl.style.color = 'var(--red)'; renderCheckoutTotals(); return; }
+  appliedPromo = promo; msgEl.textContent = `Applied: ${promo.code} 🎉`; msgEl.style.color = 'var(--green)';
+  renderCheckoutTotals();
+}
 
-        // جلب الأوردرات وعرضها
-        function fetchOrders() {
-            fetch(API_URL + "?action=getOrders").then(res => res.json()).then(data => {
-                let html = "";
-                let newOrders = data.filter(o => o.status.includes("جديد"));
-                
-                // رن الجرس لو في أوردر جديد
-                if (data.length > lastOrderCount && newOrders.length > 0) {
-                    document.getElementById('ring').play();
-                }
-                lastOrderCount = data.length;
+function computeBreakdown(){
+  const { subtotal } = cartTotals();
+  let discount = 0;
+  if(appliedPromo) discount = appliedPromo.type === 'percent' ? subtotal * (appliedPromo.value/100) : appliedPromo.value;
+  discount = Math.min(discount, subtotal);
+  const deliveryFee = state.orderType === 'Delivery' ? config.deliveryFee : 0;
+  const taxable = subtotal - discount;
+  const tax = taxable * config.taxRate;
+  const service = taxable * config.serviceChargeRate;
+  const total = taxable + tax + service + deliveryFee;
+  return { subtotal, discount, deliveryFee, tax, service, total };
+}
 
-                data.forEach(order => {
-                    let isDone = !order.status.includes("جديد");
-                    html += `
-                    <div class="order-card ${isDone ? 'done' : ''}">
-                        <div style="display:flex; justify-content:space-between;">
-                            <h3>رقم: ${order.orderId} | ترابيزة: ${order.table}</h3>
-                            <span style="font-weight:bold; color: ${isDone?'green':'red'}">${order.status}</span>
-                        </div>
-                        <p style="white-space: pre-line; background: #f9f9f9; padding: 10px; border-radius:5px;">${order.details}</p>
-                        <h4>الإجمالي: ${order.total} ج.م</h4>
-                        <small style="color:#7f8c8d;">الوقت: ${order.date}</small>
-                    </div>`;
-                });
-                document.getElementById('orders-container').innerHTML = html || "<h3 style='text-align:center;'>لا توجد طلبات</h3>";
-            });
-        }
+function renderCheckoutTotals(){
+  const el = document.getElementById('checkoutTotals'); if(!el) return;
+  const b = computeBreakdown();
+  el.innerHTML = `
+    <div class="flex justify-between text-sm"><span style="color:var(--text-dim)">${t('subtotal')}</span><span class="font-mono">${fmt(b.subtotal)}</span></div>
+    ${b.discount>0 ? `<div class="flex justify-between text-sm"><span style="color:var(--green)">${t('discount')}</span><span class="font-mono" style="color:var(--green)">-${fmt(b.discount)}</span></div>` : ''}
+    ${b.deliveryFee>0 ? `<div class="flex justify-between text-sm"><span style="color:var(--text-dim)">${t('deliveryFee')}</span><span class="font-mono">${fmt(b.deliveryFee)}</span></div>` : ''}
+    <div class="flex justify-between text-sm"><span style="color:var(--text-dim)">${t('tax')} (${Math.round(config.taxRate*100)}%)</span><span class="font-mono">${fmt(b.tax)}</span></div>
+    <div class="flex justify-between text-sm"><span style="color:var(--text-dim)">${t('service')} (${Math.round(config.serviceChargeRate*100)}%)</span><span class="font-mono">${fmt(b.service)}</span></div>
+    <div class="flex justify-between items-center pt-3 mt-2 border-t" style="border-color:var(--border)"><span class="text-sm font-medium">${t('total')}</span><span class="font-mono font-bold text-xl" style="color:var(--accent)">${fmt(b.total)}</span></div>
+    <p class="text-[11px] mt-1" style="color:var(--text-faint)">${t('earnPoints')} ${Math.round(b.total*0.05)} ${t('points')} 🎯</p>
+  `;
+  const btn = document.getElementById('confirmOrderBtn');
+  if(btn) btn.disabled = b.subtotal < config.minOrder && state.orderType==='Delivery';
+  const minWarn = document.getElementById('minOrderWarn');
+  if(minWarn) minWarn.classList.toggle('hidden', !(state.orderType==='Delivery' && b.subtotal < config.minOrder));
+}
 
-        // جلب المنيو للتحكم فيه
-        function fetchAdminMenu() {
-            document.getElementById('menu-control-container').innerHTML = "<tr><td colspan='3'>جاري التحميل...</td></tr>";
-            fetch(API_URL + "?action=getMenu").then(res => res.json()).then(data => {
-                let html = "";
-                data.forEach(item => {
-                    let isChecked = item.available ? "checked" : "";
-                    html += `
-                    <tr>
-                        <td style="font-weight:bold;">${item.name}</td>
-                        <td>${item.price} ج.م</td>
-                        <td>
-                            <label class="switch">
-                                <input type="checkbox" ${isChecked} onchange="toggleAvailability(${item.row}, this.checked)">
-                                <span class="slider"></span>
-                            </label>
-                        </td>
-                    </tr>`;
-                });
-                document.getElementById('menu-control-container').innerHTML = html;
-            });
-        }
+function getScheduleOptions(){
+  const opts = [`<option value="asap">${t('asap')}</option>`];
+  const now = new Date();
+  for(let i=1; i<=6; i++){
+    const d = new Date(now.getTime() + i*30*60000);
+    const label = d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    opts.push(`<option value="${label}">${label}</option>`);
+  }
+  return opts.join('');
+}
 
-        // تغيير حالة الصنف (متاح / غير متاح)
-        function toggleAvailability(row, isAvailable) {
-            let status = isAvailable ? "true" : "false";
-            fetch(`${API_URL}?action=toggleMenu&row=${row}&status=${status}`)
-            .then(res => res.json())
-            .then(data => {
-                console.log("تم التحديث");
-            });
-        }
+function renderCheckout(){
+  appliedPromo = null;
+  const savedCustomer = JSON.parse(localStorage.getItem('menuos_customer') || 'null');
+  const paymentOpts = [ {id:'Cash', label:t('cash')}, {id:'Card', label:t('cardOnDelivery')}, {id:'Wallet', label:t('wallet')} ];
 
-        // تشغيل أوتوماتيك
-        window.onload = fetchOrders;
-        setInterval(fetchOrders, 10000); // تحديث الأوردرات كل 10 ثواني
-    </script>
+  document.getElementById('checkoutContent').innerHTML = `
+    <h2 class="font-display font-semibold text-xl mb-4">${t('checkout')}</h2>
+
+    <div class="space-y-3 mb-6">
+      ${state.cart.map(c => `
+        <div class="flex items-start gap-3 rounded-xl p-3 border" style="background:var(--surface-2); border-color:var(--border);">
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-semibold">${c.name}</p>
+            ${c.optionsSummary ? `<p class="text-xs mt-0.5" style="color:var(--text-dim)">${c.optionsSummary}</p>` : ''}
+            ${c.isMeal ? `<p class="text-xs mt-0.5" style="color:var(--accent)">🥤🍟 Meal upgrade</p>` : ''}
+            <div class="flex items-center gap-2 mt-2">
+              <button onclick="changeCartQty('${c.cartId}',-1)" class="qty-btn w-6 h-6 rounded-full text-sm font-bold" style="background:var(--surface-3)">–</button>
+              <span class="font-mono text-xs w-4 text-center">${c.qty}</span>
+              <button onclick="changeCartQty('${c.cartId}',1)" class="qty-btn w-6 h-6 rounded-full text-sm font-bold" style="background:var(--surface-3)">+</button>
+            </div>
+          </div>
+          <div class="text-right shrink-0">
+            <p class="font-mono text-sm font-semibold">${fmt(c.unitPrice*c.qty+c.mealAddon)}</p>
+            <button onclick="removeFromCart('${c.cartId}')" class="text-[11px] mt-1" style="color:var(--red)">Remove</button>
+          </div>
+        </div>`).join('')}
+    </div>
+
+    ${state.orderType === 'Dine-in' ? `
+    <div class="mb-5 rounded-xl p-3 border flex items-center gap-2" style="background:var(--accent-soft); border-color:var(--accent);">
+      <span class="text-lg">🍽️</span><p class="text-sm font-medium">${t('table')}: ${state.tableNumber || '—'}</p>
+    </div>` : ''}
+
+    <div class="mb-5">
+      <label class="text-xs font-mono uppercase tracking-wide mb-2 block" style="color:var(--text-faint)">${t('promo')}</label>
+      <div class="flex gap-2">
+        <input id="promoInput" placeholder="e.g. WELCOME10" class="flex-1 rounded-xl px-3.5 py-2.5 text-sm border font-mono uppercase" style="background:var(--surface-2); border-color:var(--border); color:var(--text);">
+        <button onclick="applyPromoCode()" class="btn-press px-4 rounded-xl text-sm font-semibold" style="background:var(--surface-3); color:var(--text);">${t('apply')}</button>
+      </div>
+      <p id="promoMsg" class="text-xs mt-1.5"></p>
+    </div>
+
+    <div class="mb-5">
+      <p class="text-xs font-mono uppercase tracking-wide mb-2" style="color:var(--text-faint)">${t('schedule')}</p>
+      <select id="scheduleSelect" class="w-full rounded-xl px-3.5 py-2.5 text-sm border" style="background:var(--surface-2); border-color:var(--border); color:var(--text);">${getScheduleOptions()}</select>
+    </div>
+
+    <div class="mb-5">
+      <p class="text-xs font-mono uppercase tracking-wide mb-2" style="color:var(--text-faint)">${t('payment')}</p>
+      <div class="flex gap-2 flex-wrap">
+        ${paymentOpts.map((p,idx) => `
+          <button type="button" onclick="selectPayment('${p.id}')" data-pay="${p.id}" class="pay-opt btn-press px-3.5 py-2 rounded-xl text-xs font-medium border"
+            style="${idx===0 ? 'background:var(--accent); color:#14120F; border-color:var(--accent);' : 'background:var(--surface-2); color:var(--text-dim); border-color:var(--border);'}">${p.label}</button>`).join('')}
+      </div>
+    </div>
+
+    <div class="mb-5">
+      <label class="text-xs font-mono uppercase tracking-wide mb-2 block" style="color:var(--text-faint)">${t('notes')}</label>
+      <textarea id="orderNotes" rows="2" placeholder="e.g. no onions…" class="w-full rounded-xl px-3.5 py-2.5 text-sm border resize-none" style="background:var(--surface-2); border-color:var(--border); color:var(--text);"></textarea>
+    </div>
+
+    <div class="space-y-3 mb-6">
+      <p class="text-xs font-mono uppercase tracking-wide" style="color:var(--text-faint)">${t('details')}</p>
+      <input id="custName" value="${savedCustomer?.name||''}" placeholder="${t('name')}" class="w-full rounded-xl px-3.5 py-3 text-sm border" style="background:var(--surface-2); border-color:var(--border); color:var(--text);">
+      <input id="custPhone" value="${savedCustomer?.phone||''}" onblur="checkReturningCustomer()" placeholder="${t('phone')}" type="tel" class="w-full rounded-xl px-3.5 py-3 text-sm border" style="background:var(--surface-2); border-color:var(--border); color:var(--text);">
+      ${state.orderType !== 'Dine-in' ? `<input id="custAddress" value="${savedCustomer?.address||''}" placeholder="${t('address')}" class="w-full rounded-xl px-3.5 py-3 text-sm border" style="background:var(--surface-2); border-color:var(--border); color:var(--text);">` : ''}
+      <p id="returningMsg" class="text-xs"></p>
+    </div>
+
+    <div id="checkoutTotals" class="mb-2 pt-4 border-t space-y-1.5" style="border-color:var(--border);"></div>
+    <p id="minOrderWarn" class="hidden text-xs mb-4" style="color:var(--red)">Minimum order for delivery is ${fmt(config.minOrder)}.</p>
+
+    <button id="confirmOrderBtn" onclick="confirmOrder()" class="w-full rounded-2xl py-4 font-semibold flex items-center justify-center gap-2 btn-press shadow-xl disabled:opacity-50" style="background:var(--accent); color:#14120F;">
+      ${t('confirm')}
+    </button>
+    <p class="text-[11px] text-center mt-3" style="color:var(--text-faint)">Order syncs instantly to the Admin Dashboard.</p>
+  `;
+  state.selectedPayment = 'Cash';
+  renderCheckoutTotals();
+  if(savedCustomer?.phone) checkReturningCustomer();
+}
+function selectPayment(id){
+  state.selectedPayment = id;
+  document.querySelectorAll('.pay-opt').forEach(b => {
+    const on = b.dataset.pay === id;
+    b.style.background = on ? 'var(--accent)' : 'var(--surface-2)';
+    b.style.color = on ? '#14120F' : 'var(--text-dim)';
+    b.style.borderColor = on ? 'var(--accent)' : 'var(--border)';
+  });
+}
+async function checkReturningCustomer(){
+  const phone = document.getElementById('custPhone')?.value.trim(); if(!phone) return;
+  const orders = await MockAPI.getOrders();
+  const prior = orders.filter(o => o.customer.phone === phone);
+  const el = document.getElementById('returningMsg'); if(!el) return;
+  if(prior.length){
+    const points = Math.round(prior.reduce((s,o)=>s+o.total,0) * 0.05);
+    el.innerHTML = `${t('welcomeBack')} ${t('youHave')} <span class="font-mono font-semibold" style="color:var(--accent)">${points}</span> ${t('loyaltyPts')} · ${prior.length} previous orders.`;
+    el.style.color = 'var(--text-dim)';
+  } else { el.textContent = ''; }
+}
+
+async function confirmOrder(){
+  const name = document.getElementById('custName').value.trim();
+  const phone = document.getElementById('custPhone').value.trim();
+  const address = document.getElementById('custAddress')?.value.trim() || '';
+  const notes = document.getElementById('orderNotes').value.trim();
+  const schedule = document.getElementById('scheduleSelect').value;
+
+  if(!name || !phone || (state.orderType !== 'Dine-in' && !address)){ shakeCheckout(); return; }
+
+  const btn = document.getElementById('confirmOrderBtn');
+  btn.disabled = true; btn.innerHTML = `<span class="w-4 h-4 border-2 rounded-full animate-spin inline-block" style="border-color:#14120F transparent #14120F transparent"></span> Sending…`;
+
+  const b = computeBreakdown();
+  localStorage.setItem('menuos_customer', JSON.stringify({ name, phone, address }));
+
+  const order = {
+    id: uid('ORD').toUpperCase(), ts: Date.now(),
+    customer: { name, phone, address }, orderType: state.orderType,
+    tableNumber: state.tableNumber, branch: state.activeBranch,
+    payment: state.selectedPayment, scheduledFor: schedule,
+    promoCode: appliedPromo?.code || null,
+    items: state.cart.map(c => ({ name:c.name, qty:c.qty, unitPrice:c.unitPrice, optionsSummary:c.optionsSummary, isMeal:c.isMeal, mealAddon:c.mealAddon, lineTotal:c.unitPrice*c.qty+c.mealAddon })),
+    notes, ...b, total: b.total, status: 'Pending'
+  };
+
+  await MockAPI.postOrder(order);
+  const waMessage = buildWhatsAppMessage(order);
+  const waUrl = `https://wa.me/${config.whatsappNumber}?text=${encodeURIComponent(waMessage)}`;
+
+  state.cart = []; persistCart();
+  localStorage.setItem('menuos_last_order', order.id);
+  closeCheckout(); renderCartBar(); showOrderToast(); refreshTrackChip();
+  window.open(waUrl, '_blank');
+}
+function shakeCheckout(){ const sheet = document.getElementById('checkoutSheet'); sheet.animate([{transform:'translateX(0)'},{transform:'translateX(-6px)'},{transform:'translateX(6px)'},{transform:'translateX(0)'}], {duration:280}); }
+
+function buildWhatsAppMessage(order){
+  const lines = [];
+  lines.push(`*New Order — ${config.restaurantName}*`);
+  lines.push(`Order #${order.id} · ${order.orderType}${order.tableNumber ? ' (Table '+order.tableNumber+')' : ''}`);
+  lines.push('');
+  lines.push(`*Customer:* ${order.customer.name}`);
+  lines.push(`*Phone:* ${order.customer.phone}`);
+  if(order.customer.address) lines.push(`*Address:* ${order.customer.address}`);
+  lines.push(`*Payment:* ${order.payment}`);
+  lines.push(`*When:* ${order.scheduledFor === 'asap' ? 'ASAP' : order.scheduledFor}`);
+  lines.push('');
+  lines.push('*Items:*');
+  order.items.forEach(it => lines.push(`• ${it.qty}× ${it.name}${it.optionsSummary ? ` (${it.optionsSummary})` : ''}${it.isMeal ? ' + Meal upgrade' : ''} — ${fmt(it.lineTotal)}`));
+  if(order.promoCode) lines.push(`\n*Promo:* ${order.promoCode} (-${fmt(order.discount)})`);
+  if(order.notes){ lines.push(''); lines.push(`*Notes:* ${order.notes}`); }
+  lines.push('');
+  lines.push(`*Total: ${fmt(order.total)}*`);
+  return lines.join('\n');
+}
+function showOrderToast(){
+  document.getElementById('toastTitle').textContent = t('orderSent');
+  document.getElementById('toastBody').textContent = t('openingWA');
+  const toast = document.getElementById('orderToast');
+  toast.style.opacity='1'; toast.style.transform='translate(-50%,0)';
+  setTimeout(()=>{ toast.style.opacity='0'; toast.style.transform='translate(-50%,-30px)'; }, 2600);
+}
+
+/* ---------------- track order + history ---------------- */
+function refreshTrackChip(){
+  const lastId = localStorage.getItem('menuos_last_order');
+  document.getElementById('trackChip').classList.toggle('hidden', !lastId);
+}
+async function openTrackOrder(){
+  const lastId = localStorage.getItem('menuos_last_order');
+  const orders = await MockAPI.getOrders();
+  const order = orders.find(o => o.id === lastId);
+  const customer = JSON.parse(localStorage.getItem('menuos_customer')||'null');
+  const history = customer ? orders.filter(o => o.customer.phone === customer.phone) : [];
+
+  let html = `<h2 class="font-display font-semibold text-xl mb-4">${t('trackTitle')}</h2>`;
+  if(order){
+    const idx = ORDER_STATUSES.indexOf(order.status);
+    html += `<div class="mb-6 rounded-2xl p-4 border" style="background:var(--surface-2); border-color:var(--border);">
+      <p class="text-xs font-mono mb-3" style="color:var(--text-faint)">#${order.id}</p>
+      <div class="space-y-3">
+        ${ORDER_STATUSES.filter(s=>s!=='Cancelled').map((s,i) => `
+          <div class="flex items-center gap-3">
+            <div class="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0" style="background:${i<=idx ? 'var(--accent)' : 'var(--surface-3)'}; color:${i<=idx?'#14120F':'var(--text-faint)'};">${i<=idx?'✓':i+1}</div>
+            <span class="text-sm ${i<=idx ? 'font-semibold' : ''}" style="color:${i<=idx?'var(--text)':'var(--text-faint)'}">${s}</span>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  }
+  html += `<h3 class="text-sm font-semibold mb-3">${t('orderHistory')}</h3>`;
+  if(history.length === 0){ html += `<p class="text-sm" style="color:var(--text-faint)">${t('noOrders')}</p>`; }
+  else {
+    html += `<div class="space-y-2">${history.map(o => `
+      <div class="rounded-xl p-3 border flex items-center justify-between gap-2" style="background:var(--surface-2); border-color:var(--border);">
+        <div><p class="text-xs font-mono" style="color:var(--text-faint)">#${o.id}</p><p class="text-xs" style="color:var(--text-dim)">${new Date(o.ts).toLocaleDateString()} · ${fmt(o.total)}</p></div>
+        <button onclick="reorder('${o.id}')" class="btn-press text-xs font-semibold px-3 py-1.5 rounded-lg" style="background:var(--accent); color:#14120F;">${t('reorder')}</button>
+      </div>`).join('')}</div>`;
+  }
+  document.getElementById('trackContent').innerHTML = html;
+  openSheet('trackBackdrop','trackSheet');
+}
+function closeTrackOrder(e){ if(e && e.target !== e.currentTarget) return; closeSheet('trackBackdrop','trackSheet'); }
+async function reorder(orderId){
+  const orders = await MockAPI.getOrders(); const order = orders.find(o=>o.id===orderId); if(!order) return;
+  state.cart = order.items.map(it => ({ cartId: uid('cart'), itemId:null, name:it.name, qty:it.qty, unitPrice:it.unitPrice, optionsSummary:it.optionsSummary, isMeal:it.isMeal, mealAddon:it.mealAddon }));
+  persistCart(); closeTrackOrder(); renderCartBar(); miniToast('Previous order added to cart'); openCheckout();
+}
+
+/* ============================================================
+   ADMIN SHELL
+============================================================= */
+const ADMIN_TABS = [
+  { id:'overview', label:'Overview', icon:'📊', roles:['Admin','Cashier','Kitchen'] },
+  { id:'orders', label:'Live Orders', icon:'🧾', roles:['Admin','Cashier','Kitchen'] },
+  { id:'menu', label:'Menu Management', icon:'🍔', roles:['Admin'] },
+  { id:'promotions', label:'Promotions', icon:'🏷️', roles:['Admin'] },
+  { id:'customers', label:'Customers', icon:'👥', roles:['Admin','Cashier'] },
+  { id:'staff', label:'Staff', icon:'🧑‍🍳', roles:['Admin'] },
+  { id:'branches', label:'Branches', icon:'🏬', roles:['Admin'] },
+  { id:'tables', label:'Tables', icon:'🍽️', roles:['Admin','Cashier'] },
+  { id:'reviews', label:'Reviews', icon:'⭐', roles:['Admin'] },
+  { id:'activity', label:'Activity Log', icon:'🕓', roles:['Admin'] },
+  { id:'settings', label:'Settings', icon:'⚙️', roles:['Admin'] },
+];
+function setRole(role){ state.role = role; if(role==='Kitchen') state.adminTab = 'orders'; renderAdminShell(); }
+
+function renderAdminShell(){
+  applyBranding();
+  document.getElementById('roleSelect').value = state.role;
+  const visible = ADMIN_TABS.filter(tb => tb.roles.includes(state.role));
+  if(!visible.find(v=>v.id===state.adminTab)) state.adminTab = visible[0].id;
+
+  document.getElementById('sidebarLinks').innerHTML = visible.map(tb => `
+    <button onclick="showAdminTab('${tb.id}')" class="side-link ${state.adminTab===tb.id?'active':''} w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2.5"
+      style="${state.adminTab===tb.id ? '' : 'color:var(--text-dim)'}">${tb.icon} ${tb.label}</button>`).join('');
+
+  const mobileSel = document.getElementById('mobileTabSelect');
+  mobileSel.innerHTML = visible.map(tb => `<option value="${tb.id}" ${state.adminTab===tb.id?'selected':''}>${tb.icon} ${tb.label}</option>`).join('');
+
+  const activeTab = visible.find(v=>v.id===state.adminTab);
+  document.getElementById('adminTabTitle').textContent = activeTab.label;
+  document.getElementById('adminTabSubtitle').textContent = { overview:'Performance at a glance', orders:'Track and manage incoming orders in real time', menu:'Prices, stock and availability sync instantly to the client menu', promotions:'Create and manage discount codes', customers:'Your customer relationships and loyalty tiers', staff:'Manage team members and roles', branches:'Manage multiple restaurant locations', tables:'Dine-in table status for QR ordering', reviews:'Moderate customer reviews', activity:'Full audit trail of dashboard actions', settings:'White-label branding & business configuration' }[activeTab.id] || '';
+
+  renderAdminTab();
+}
+function showAdminTab(id){ state.adminTab = id; renderAdminShell(); }
+
+async function renderAdminTab(){
+  const container = document.getElementById('adminContent');
+  container.innerHTML = `<div class="py-20 text-center text-sm" style="color:var(--text-faint)">Loading…</div>`;
+  const fn = { overview:renderOverviewTab, orders:renderOrdersTab, menu:renderMenuTab, promotions:renderPromotionsTab, customers:renderCustomersTab, staff:renderStaffTab, branches:renderBranchesTab, tables:renderTablesTab, reviews:renderReviewsTab, activity:renderActivityTab, settings:renderSettingsTab }[state.adminTab];
+  if(fn) await fn(container);
+}
+
+function statCard(label, value, extra=''){
+  return `<div class="rounded-2xl p-4 sm:p-5 border float-in" style="background:var(--surface); border-color:var(--border);">
+    <p class="text-[11px] font-mono uppercase tracking-wide" style="color:var(--text-faint)">${label}</p>
+    <p class="font-display font-semibold text-2xl sm:text-3xl mt-1">${value}</p>${extra}</div>`;
+}
+
+/* ---------------- Overview ---------------- */
+async function renderOverviewTab(container){
+  const [menu, orders] = await Promise.all([MockAPI.getMenu(), MockAPI.getOrders()]);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const todays = orders.filter(o => o.ts >= today.getTime() && o.status !== 'Cancelled');
+  const salesToday = todays.reduce((s,o)=>s+o.total,0);
+  const aov = todays.length ? salesToday/todays.length : 0;
+  const lowStockItems = menu.items.filter(i => i.active && i.stock <= i.lowStock);
+
+  const days = Array.from({length:7}, (_,i) => { const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate()-(6-i)); return d; });
+  const daySales = days.map(d => orders.filter(o => o.status!=='Cancelled' && new Date(o.ts).toDateString()===d.toDateString()).reduce((s,o)=>s+o.total,0));
+  const maxSale = Math.max(...daySales, 1);
+  const barsHtml = daySales.map((v,i) => `
+    <div class="flex flex-col items-center gap-1.5 flex-1">
+      <div class="w-full rounded-t-md" style="height:${Math.max(6,(v/maxSale)*100)}px; background:var(--accent);"></div>
+      <span class="text-[10px] font-mono" style="color:var(--text-faint)">${days[i].toLocaleDateString([], {weekday:'short'})}</span>
+    </div>`).join('');
+
+  const itemCounts = {};
+  orders.forEach(o => o.items?.forEach(it => { itemCounts[it.name] = (itemCounts[it.name]||0) + it.qty; }));
+  const topItems = Object.entries(itemCounts).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+  const typeCounts = {};
+  orders.forEach(o => { typeCounts[o.orderType||'Delivery'] = (typeCounts[o.orderType||'Delivery']||0)+1; });
+  const typeTotal = orders.length || 1;
+
+  container.innerHTML = `
+    ${lowStockItems.length ? `<div class="rounded-2xl p-4 mb-5 border flex items-center gap-3" style="background:rgba(225,84,63,.08); border-color:var(--red);">
+      <span class="text-xl">⚠️</span><p class="text-sm"><strong>${lowStockItems.length} item(s)</strong> running low on stock: ${lowStockItems.map(i=>i.name).join(', ')}</p>
+    </div>` : ''}
+
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+      ${statCard("Today's Sales", fmt(salesToday))}
+      ${statCard('Total Orders', orders.length)}
+      ${statCard('Avg Order Value', fmt(aov))}
+      ${statCard('Active Items', `${menu.items.filter(i=>i.active).length}/${menu.items.length}`)}
+    </div>
+
+    <div class="grid lg:grid-cols-3 gap-5 mb-6">
+      <div class="lg:col-span-2 rounded-2xl p-5 border" style="background:var(--surface); border-color:var(--border);">
+        <p class="text-sm font-semibold mb-4">Revenue — Last 7 Days</p>
+        <div class="flex items-end gap-2 h-32">${barsHtml}</div>
+      </div>
+      <div class="rounded-2xl p-5 border" style="background:var(--surface); border-color:var(--border);">
+        <p class="text-sm font-semibold mb-4">Order Types</p>
+        <div class="space-y-3">
+          ${Object.entries(typeCounts).map(([k,v]) => `
+            <div>
+              <div class="flex justify-between text-xs mb-1"><span style="color:var(--text-dim)">${k}</span><span class="font-mono">${Math.round(v/typeTotal*100)}%</span></div>
+              <div class="w-full h-2 rounded-full" style="background:var(--surface-3)"><div class="h-2 rounded-full" style="width:${v/typeTotal*100}%; background:var(--accent);"></div></div>
+            </div>`).join('') || `<p class="text-xs" style="color:var(--text-faint)">No orders yet.</p>`}
+        </div>
+      </div>
+    </div>
+
+    <div class="rounded-2xl p-5 border" style="background:var(--surface); border-color:var(--border);">
+      <p class="text-sm font-semibold mb-4">Top Selling Items</p>
+      ${topItems.length ? `<div class="space-y-2">${topItems.map(([name,qty],i) => `
+        <div class="flex items-center justify-between text-sm py-1.5">
+          <span class="flex items-center gap-2"><span class="font-mono text-xs w-5" style="color:var(--text-faint)">#${i+1}</span>${name}</span>
+          <span class="font-mono" style="color:var(--accent)">${qty} sold</span>
+        </div>`).join('')}</div>` : `<p class="text-xs" style="color:var(--text-faint)">No sales data yet — place a demo order from the Client Menu.</p>`}
+    </div>
+  `;
+}
+
+/* ---------------- Orders (+ KDS + filters + export + print) ---------------- */
+let kdsMode = false, orderStatusFilter = 'All', orderSearchQ = '';
+async function renderOrdersTab(container){
+  const orders = await MockAPI.getOrders();
+  let filtered = orders;
+  if(orderStatusFilter !== 'All') filtered = filtered.filter(o => o.status === orderStatusFilter);
+  if(orderSearchQ) filtered = filtered.filter(o => (o.id+o.customer.name+o.customer.phone).toLowerCase().includes(orderSearchQ.toLowerCase()));
+  if(state.role === 'Kitchen') filtered = filtered.filter(o => ['Pending','Preparing'].includes(o.status));
+
+  container.innerHTML = `
+    <div class="flex flex-wrap items-center gap-2 mb-4">
+      <input id="orderSearchInput" value="${orderSearchQ}" oninput="orderSearchQ=this.value; renderAdminTab()" placeholder="Search order, name or phone…" class="flex-1 min-w-[180px] rounded-xl px-3.5 py-2.5 text-sm border" style="background:var(--surface-2); border-color:var(--border); color:var(--text);">
+      <select onchange="orderStatusFilter=this.value; renderAdminTab()" class="rounded-xl px-3 py-2.5 text-sm border" style="background:var(--surface-2); border-color:var(--border); color:var(--text);">
+        <option ${orderStatusFilter==='All'?'selected':''}>All</option>
+        ${ORDER_STATUSES.map(s=>`<option ${orderStatusFilter===s?'selected':''}>${s}</option>`).join('')}
+      </select>
+      ${state.role!=='Kitchen' ? `<button onclick="kdsMode=!kdsMode; renderAdminTab()" class="btn-press px-3.5 py-2.5 rounded-xl text-xs font-semibold border" style="background:${kdsMode?'var(--accent)':'var(--surface-2)'}; color:${kdsMode?'#14120F':'var(--text-dim)'}; border-color:var(--border);">🍳 Kitchen View</button>
+      <button onclick="exportOrdersCSV()" class="btn-press px-3.5 py-2.5 rounded-xl text-xs font-semibold border" style="background:var(--surface-2); color:var(--text-dim); border-color:var(--border);">⬇ Export CSV</button>` : ''}
+    </div>
+
+    ${(kdsMode || state.role==='Kitchen') ? renderKDS(filtered) : renderOrdersTable(filtered)}
+  `;
+}
+function renderKDS(orders){
+  if(orders.length === 0) return `<div class="text-center py-16 text-sm" style="color:var(--text-faint)">No active orders in the kitchen queue.</div>`;
+  return `<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    ${orders.map(o => `
+      <div class="rounded-2xl p-4 border pop-in" style="background:var(--surface); border-color:var(--border);">
+        <div class="flex justify-between items-start mb-2">
+          <span class="font-mono text-xs" style="color:var(--text-faint)">#${o.id}</span>
+          <span class="status-chip px-2 py-1 rounded-md" style="background:${STATUS_COLORS[o.status].bg}; color:${STATUS_COLORS[o.status].fg};">${o.status}</span>
+        </div>
+        <p class="text-sm font-semibold mb-2">${o.orderType}${o.tableNumber ? ' · Table '+o.tableNumber : ''}</p>
+        <div class="space-y-1 mb-3">${o.items.map(it=>`<p class="text-sm">${it.qty}× ${it.name} <span class="text-xs" style="color:var(--text-faint)">${it.optionsSummary||''}</span></p>`).join('')}</div>
+        <div class="flex gap-2">
+          ${o.status==='Pending' ? `<button onclick="setOrderStatus('${o.id}','Preparing')" class="btn-press flex-1 text-xs font-semibold py-2 rounded-lg" style="background:var(--accent); color:#14120F;">Start Preparing</button>` : ''}
+          ${o.status==='Preparing' ? `<button onclick="setOrderStatus('${o.id}','Out for Delivery')" class="btn-press flex-1 text-xs font-semibold py-2 rounded-lg" style="background:var(--accent); color:#14120F;">Mark Ready</button>` : ''}
+        </div>
+      </div>`).join('')}
+  </div>`;
+}
+function renderOrdersTable(orders){
+  if(orders.length === 0) return `<div class="rounded-2xl border p-12 text-center" style="background:var(--surface); border-color:var(--border);"><p class="text-sm" style="color:var(--text-dim)">No orders match — place one from the Client Menu to see it appear here instantly.</p></div>`;
+  return `<div class="rounded-2xl border overflow-hidden" style="background:var(--surface); border-color:var(--border);">
+    <div class="overflow-x-auto"><table class="w-full text-sm min-w-[860px]">
+      <thead><tr class="text-left text-[11px] font-mono uppercase tracking-wide" style="color:var(--text-faint); background:var(--surface-2);">
+        <th class="px-4 py-3 font-medium">Order</th><th class="px-4 py-3 font-medium">Client</th><th class="px-4 py-3 font-medium">Type</th>
+        <th class="px-4 py-3 font-medium">Items</th><th class="px-4 py-3 font-medium">Total</th><th class="px-4 py-3 font-medium">Status</th><th class="px-4 py-3 font-medium">Actions</th>
+      </tr></thead>
+      <tbody>
+        ${orders.map(o => {
+          const sc = STATUS_COLORS[o.status] || STATUS_COLORS['Pending'];
+          const itemsText = o.items.map(it => `${it.qty}× ${it.name}`).join(', ');
+          const nextIdx = ORDER_STATUSES.indexOf(o.status) + 1;
+          const nextStatus = ['Pending','Preparing','Out for Delivery'].includes(o.status) ? ORDER_STATUSES[nextIdx] : null;
+          return `<tr class="border-t align-top" style="border-color:var(--border);">
+            <td class="px-4 py-3 font-mono text-xs" style="color:var(--text-dim)">${o.id}<br><span style="color:var(--text-faint)">${new Date(o.ts).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</span></td>
+            <td class="px-4 py-3"><p class="text-sm font-medium">${o.customer.name}</p><p class="text-xs font-mono" style="color:var(--text-faint)">${o.customer.phone}</p></td>
+            <td class="px-4 py-3 text-xs" style="color:var(--text-dim)">${o.orderType}${o.tableNumber?' · T'+o.tableNumber:''}</td>
+            <td class="px-4 py-3 text-xs max-w-[220px]" style="color:var(--text-dim)">${itemsText}</td>
+            <td class="px-4 py-3 font-mono text-sm font-semibold" style="color:var(--accent)">${fmt(o.total)}</td>
+            <td class="px-4 py-3">
+              <select onchange="setOrderStatus('${o.id}', this.value)" class="text-xs font-mono px-2 py-1.5 rounded-lg border cursor-pointer" style="background:${sc.bg}; color:${sc.fg}; border-color:transparent;">
+                ${ORDER_STATUSES.map(s => `<option value="${s}" ${s===o.status?'selected':''} style="background:var(--surface-2); color:var(--text);">${s}</option>`).join('')}
+              </select>
+            </td>
+            <td class="px-4 py-3"><div class="flex gap-1.5 flex-wrap">
+              ${nextStatus ? `<button onclick="setOrderStatus('${o.id}','${nextStatus}')" class="btn-press text-xs font-semibold px-2.5 py-1.5 rounded-lg" style="background:var(--accent); color:#14120F;">→ ${nextStatus}</button>` : ''}
+              <button onclick="printReceipt('${o.id}')" class="btn-press text-xs font-semibold px-2.5 py-1.5 rounded-lg" style="background:var(--surface-2); color:var(--text-dim);">🖨️</button>
+              ${!['Delivered','Cancelled'].includes(o.status) ? `<button onclick="cancelOrder('${o.id}')" class="btn-press text-xs font-semibold px-2.5 py-1.5 rounded-lg" style="background:rgba(225,84,63,.12); color:var(--red);">✕</button>` : ''}
+            </div></td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table></div>
+  </div>`;
+}
+async function setOrderStatus(id, status){ await MockAPI.updateOrderStatus(id, status); miniToast(`Order ${id} → ${status}`); renderAdminTab(); }
+async function cancelOrder(id){ const reason = prompt('Reason for cancellation (optional):') || ''; await MockAPI.updateOrderStatus(id, 'Cancelled', reason); renderAdminTab(); }
+function printReceipt(id){
+  loadDBAsync(id);
+}
+async function loadDBAsync(id){
+  const orders = await MockAPI.getOrders(); const o = orders.find(x=>x.id===id); if(!o) return;
+  const w = window.open('', '_blank', 'width=380,height=600');
+  w.document.write(`
+    <html><head><title>Receipt ${o.id}</title><style>
+      body{font-family:monospace; padding:20px; color:#111;} h2{margin:0 0 4px;} .line{display:flex; justify-content:space-between; margin:2px 0;}
+      hr{border:none; border-top:1px dashed #999; margin:10px 0;}
+    </style></head><body>
+      <h2>${config.restaurantName}</h2>
+      <p>Order #${o.id}<br>${new Date(o.ts).toLocaleString()}</p>
+      <hr>
+      <p>${o.customer.name}<br>${o.customer.phone}${o.customer.address ? '<br>'+o.customer.address : ''}</p>
+      <hr>
+      ${o.items.map(it => `<div class="line"><span>${it.qty}× ${it.name}</span><span>${fmt(it.lineTotal)}</span></div>`).join('')}
+      <hr>
+      <div class="line"><span>Subtotal</span><span>${fmt(o.subtotal||0)}</span></div>
+      <div class="line"><span>Tax</span><span>${fmt(o.tax||0)}</span></div>
+      <div class="line"><span>Service</span><span>${fmt(o.service||0)}</span></div>
+      <div class="line" style="font-weight:bold; font-size:16px;"><span>Total</span><span>${fmt(o.total)}</span></div>
+      <hr><p style="text-align:center">Thank you! 🙏</p>
+      <script>window.print()<\/script>
+    </body></html>`);
+  w.document.close();
+}
+function exportOrdersCSV(){
+  MockAPI.getOrders().then(orders => {
+    const rows = [['Order ID','Date','Customer','Phone','Type','Status','Total']];
+    orders.forEach(o => rows.push([o.id, new Date(o.ts).toLocaleString(), o.customer.name, o.customer.phone, o.orderType, o.status, o.total]));
+    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], {type:'text/csv'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'orders.csv'; a.click();
+    miniToast('Orders exported to CSV');
+  });
+}
+
+/* ---------------- Menu Management ---------------- */
+async function renderMenuTab(container){
+  const menu = await MockAPI.getMenu();
+  container.innerHTML = `
+    <div class="rounded-2xl border overflow-hidden" style="background:var(--surface); border-color:var(--border);">
+      <div class="overflow-x-auto"><table class="w-full text-sm min-w-[760px]">
+        <thead><tr class="text-left text-[11px] font-mono uppercase tracking-wide" style="color:var(--text-faint); background:var(--surface-2);">
+          <th class="px-4 py-3 font-medium">Item</th><th class="px-4 py-3 font-medium">Category</th><th class="px-4 py-3 font-medium">Price</th>
+          <th class="px-4 py-3 font-medium">Stock</th><th class="px-4 py-3 font-medium">Status</th><th class="px-4 py-3 font-medium text-right">Active</th>
+        </tr></thead>
+        <tbody>
+          ${menu.items.map(item => {
+            const cat = menu.categories.find(c => c.id === item.category);
+            const low = item.stock <= item.lowStock;
+            return `<tr class="border-t" style="border-color:var(--border);">
+              <td class="px-4 py-3"><p class="text-sm font-semibold">${item.name}</p><p class="text-xs line-clamp-1" style="color:var(--text-faint)">${item.desc}</p></td>
+              <td class="px-4 py-3 text-xs" style="color:var(--text-dim)">${cat ? `${cat.icon} ${cat.name}` : '—'}</td>
+              <td class="px-4 py-3"><div class="flex items-center gap-1"><span class="font-mono text-xs" style="color:var(--text-faint)">${config.currency}</span>
+                <input type="number" value="${item.price}" min="0" onchange="updatePrice('${item.id}', this.value)" class="w-20 rounded-lg px-2 py-1.5 text-sm font-mono border" style="background:var(--surface-2); border-color:var(--border); color:var(--text);"></div></td>
+              <td class="px-4 py-3"><input type="number" value="${item.stock}" min="0" onchange="updateStock('${item.id}', this.value)" class="w-16 rounded-lg px-2 py-1.5 text-sm font-mono border" style="background:var(--surface-2); border-color:${low?'var(--red)':'var(--border)'}; color:${low?'var(--red)':'var(--text)'};"></td>
+              <td class="px-4 py-3"><span class="status-chip px-2 py-1 rounded-md" style="background:${item.active ? 'rgba(74,222,128,.15)' : 'rgba(225,84,63,.15)'}; color:${item.active ? 'var(--green)' : 'var(--red)'};">${item.active ? 'ACTIVE' : 'INACTIVE'}</span></td>
+              <td class="px-4 py-3 text-right"><input type="checkbox" class="tgl" ${item.active ? 'checked' : ''} onchange="toggleItem('${item.id}', this.checked)"></td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table></div>
+    </div>
+    <p class="text-xs mt-3" style="color:var(--text-faint)">Changes here reflect instantly on the Client Menu — try toggling an item off, then switch screens.</p>
+  `;
+}
+async function toggleItem(id, active){ await MockAPI.toggleItemActive(id, active); miniToast(active?'Item activated':'Item deactivated'); renderAdminTab(); }
+async function updatePrice(id, price){ await MockAPI.updateItemPrice(id, Math.max(0, Number(price)||0)); renderAdminTab(); }
+async function updateStock(id, stock){ await MockAPI.updateItemStock(id, Math.max(0, Number(stock)||0)); renderAdminTab(); }
+
+/* ---------------- Promotions ---------------- */
+async function renderPromotionsTab(container){
+  const db = await MockAPI.getAll();
+  container.innerHTML = `
+    <div class="rounded-2xl p-4 border mb-5 flex flex-wrap gap-2 items-end" style="background:var(--surface); border-color:var(--border);">
+      <div><label class="text-xs" style="color:var(--text-faint)">Code</label><input id="newPromoCode" placeholder="SUMMER20" class="block rounded-lg px-3 py-2 text-sm border font-mono uppercase mt-1" style="background:var(--surface-2); border-color:var(--border); color:var(--text);"></div>
+      <div><label class="text-xs" style="color:var(--text-faint)">Type</label><select id="newPromoType" class="block rounded-lg px-3 py-2 text-sm border mt-1" style="background:var(--surface-2); border-color:var(--border); color:var(--text);"><option value="percent">%</option><option value="fixed">Fixed</option></select></div>
+      <div><label class="text-xs" style="color:var(--text-faint)">Value</label><input id="newPromoValue" type="number" placeholder="20" class="block rounded-lg px-3 py-2 text-sm border font-mono w-24 mt-1" style="background:var(--surface-2); border-color:var(--border); color:var(--text);"></div>
+      <button onclick="addPromo()" class="btn-press px-4 py-2.5 rounded-lg text-sm font-semibold" style="background:var(--accent); color:#14120F;">+ Add Code</button>
+    </div>
+    <div class="rounded-2xl border overflow-hidden" style="background:var(--surface); border-color:var(--border);">
+      <table class="w-full text-sm"><thead><tr class="text-left text-[11px] font-mono uppercase tracking-wide" style="color:var(--text-faint); background:var(--surface-2);">
+        <th class="px-4 py-3">Code</th><th class="px-4 py-3">Discount</th><th class="px-4 py-3">Status</th><th class="px-4 py-3 text-right">Actions</th></tr></thead>
+        <tbody>${db.promoCodes.map(p => `
+          <tr class="border-t" style="border-color:var(--border);">
+            <td class="px-4 py-3 font-mono font-semibold">${p.code}</td>
+            <td class="px-4 py-3 text-sm">${p.type==='percent' ? p.value+'%' : fmt(p.value)}</td>
+            <td class="px-4 py-3"><input type="checkbox" class="tgl" ${p.active?'checked':''} onchange="togglePromo('${p.id}', this.checked)"></td>
+            <td class="px-4 py-3 text-right"><button onclick="deletePromo('${p.id}')" class="text-xs" style="color:var(--red)">Delete</button></td>
+          </tr>`).join('')}</tbody>
+      </table>
+    </div>`;
+}
+async function addPromo(){
+  const code = document.getElementById('newPromoCode').value.trim().toUpperCase();
+  const type = document.getElementById('newPromoType').value;
+  const value = Number(document.getElementById('newPromoValue').value) || 0;
+  if(!code || !value) return;
+  await MockAPI.addPromo({ id: uid('promo'), code, type, value, active:true });
+  miniToast('Promo code created'); renderAdminTab();
+}
+async function togglePromo(id, active){ await MockAPI.togglePromo(id, active); renderAdminTab(); }
+async function deletePromo(id){ await MockAPI.deletePromo(id); renderAdminTab(); }
+
+/* ---------------- Customers CRM ---------------- */
+async function renderCustomersTab(container){
+  const orders = await MockAPI.getOrders();
+  const map = {};
+  orders.forEach(o => {
+    const key = o.customer.phone;
+    if(!map[key]) map[key] = { name:o.customer.name, phone:o.customer.phone, orders:0, spent:0 };
+    map[key].orders++; map[key].spent += o.total;
+  });
+  const customers = Object.values(map).sort((a,b)=>b.spent-a.spent);
+  const tier = (spent) => spent >= 2000 ? {l:'Gold', c:'var(--accent)'} : spent >= 800 ? {l:'Silver', c:'var(--text-dim)'} : {l:'Bronze', c:'#B08D57'};
+
+  container.innerHTML = customers.length === 0 ? `<div class="rounded-2xl border p-12 text-center" style="background:var(--surface); border-color:var(--border);"><p class="text-sm" style="color:var(--text-dim)">No customers yet — place a demo order to populate this list.</p></div>` : `
+    <div class="rounded-2xl border overflow-hidden" style="background:var(--surface); border-color:var(--border);">
+      <table class="w-full text-sm"><thead><tr class="text-left text-[11px] font-mono uppercase tracking-wide" style="color:var(--text-faint); background:var(--surface-2);">
+        <th class="px-4 py-3">Customer</th><th class="px-4 py-3">Phone</th><th class="px-4 py-3">Orders</th><th class="px-4 py-3">Total Spent</th><th class="px-4 py-3">Points</th><th class="px-4 py-3">Tier</th></tr></thead>
+        <tbody>${customers.map(c => { const tr = tier(c.spent); return `
+          <tr class="border-t" style="border-color:var(--border);">
+            <td class="px-4 py-3 font-medium">${c.name}</td>
+            <td class="px-4 py-3 font-mono text-xs" style="color:var(--text-dim)">${c.phone}</td>
+            <td class="px-4 py-3">${c.orders}</td>
+            <td class="px-4 py-3 font-mono" style="color:var(--accent)">${fmt(c.spent)}</td>
+            <td class="px-4 py-3 font-mono text-xs">${Math.round(c.spent*0.05)}</td>
+            <td class="px-4 py-3"><span class="status-chip px-2 py-1 rounded-md" style="background:color-mix(in srgb, ${tr.c} 18%, transparent); color:${tr.c};">${tr.l}</span></td>
+          </tr>`; }).join('')}</tbody>
+      </table>
+    </div>`;
+}
+
+/* ---------------- Staff ---------------- */
+async function renderStaffTab(container){
+  const db = await MockAPI.getAll();
+  container.innerHTML = `
+    <div class="rounded-2xl p-4 border mb-5 flex flex-wrap gap-2 items-end" style="background:var(--surface); border-color:var(--border);">
+      <div><label class="text-xs" style="color:var(--text-faint)">Name</label><input id="newStaffName" placeholder="Full name" class="block rounded-lg px-3 py-2 text-sm border mt-1" style="background:var(--surface-2); border-color:var(--border); color:var(--text);"></div>
+      <div><label class="text-xs" style="color:var(--text-faint)">Role</label><select id="newStaffRole" class="block rounded-lg px-3 py-2 text-sm border mt-1" style="background:var(--surface-2); border-color:var(--border); color:var(--text);"><option>Admin</option><option>Cashier</option><option>Kitchen</option></select></div>
+      <button onclick="addStaff()" class="btn-press px-4 py-2.5 rounded-lg text-sm font-semibold" style="background:var(--accent); color:#14120F;">+ Add Staff</button>
+    </div>
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      ${db.staff.map(s => `
+        <div class="rounded-2xl p-4 border flex items-center gap-3" style="background:var(--surface); border-color:var(--border);">
+          <div class="w-10 h-10 rounded-full flex items-center justify-center font-semibold" style="background:var(--accent-soft); color:var(--accent);">${s.name[0]}</div>
+          <div class="flex-1 min-w-0"><p class="text-sm font-semibold truncate">${s.name}</p><p class="text-xs" style="color:var(--text-dim)">${s.role}</p></div>
+          <input type="checkbox" class="tgl" ${s.active?'checked':''} onchange="toggleStaff('${s.id}', this.checked)">
+        </div>`).join('')}
+    </div>`;
+}
+async function addStaff(){
+  const name = document.getElementById('newStaffName').value.trim(); const role = document.getElementById('newStaffRole').value;
+  if(!name) return; await MockAPI.addStaff({ id: uid('staff'), name, role, active:true }); miniToast('Staff member added'); renderAdminTab();
+}
+async function toggleStaff(id, active){ await MockAPI.toggleStaff(id, active); renderAdminTab(); }
+
+/* ---------------- Branches ---------------- */
+async function renderBranchesTab(container){
+  const db = await MockAPI.getAll();
+  container.innerHTML = `
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      ${db.branches.map(b => `
+        <div class="rounded-2xl p-4 border" style="background:var(--surface); border-color:var(--border);">
+          <div class="flex items-start justify-between mb-2"><p class="text-sm font-semibold">📍 ${b.name}</p><input type="checkbox" class="tgl" ${b.active?'checked':''} onchange="toggleBranch('${b.id}', this.checked)"></div>
+          <p class="text-xs mb-1" style="color:var(--text-dim)">${b.address}</p>
+          <p class="text-xs font-mono" style="color:var(--text-faint)">${b.hours}</p>
+        </div>`).join('')}
+      <button onclick="addBranchPrompt()" class="rounded-2xl p-4 border border-dashed flex items-center justify-center text-sm font-medium btn-press" style="border-color:var(--border); color:var(--text-dim);">+ Add Branch</button>
+    </div>`;
+}
+async function toggleBranch(id, active){ await MockAPI.toggleBranch(id, active); renderAdminTab(); }
+async function addBranchPrompt(){
+  const name = prompt('Branch name:'); if(!name) return;
+  const address = prompt('Address:') || ''; const hours = prompt('Hours (e.g. 12:00 – 00:00):') || '';
+  await MockAPI.addBranch({ id: uid('branch'), name, address, hours, active:true }); renderAdminTab();
+}
+
+/* ---------------- Tables ---------------- */
+async function renderTablesTab(container){
+  const db = await MockAPI.getAll();
+  container.innerHTML = `<div class="grid grid-cols-3 sm:grid-cols-5 gap-3">
+    ${db.tables.map(tb => `
+      <button onclick="toggleTable('${tb.id}')" class="btn-press rounded-2xl p-4 border flex flex-col items-center gap-1"
+        style="background:${tb.status==='free' ? 'rgba(74,222,128,.08)' : 'rgba(225,84,63,.08)'}; border-color:${tb.status==='free' ? 'var(--green)' : 'var(--red)'};">
+        <span class="text-2xl">🍽️</span><span class="text-sm font-semibold">Table ${tb.number}</span>
+        <span class="status-chip px-2 py-0.5 rounded-md" style="background:${tb.status==='free'?'rgba(74,222,128,.15)':'rgba(225,84,63,.15)'}; color:${tb.status==='free'?'var(--green)':'var(--red)'};">${tb.status.toUpperCase()}</span>
+      </button>`).join('')}
+  </div>
+  <p class="text-xs mt-4" style="color:var(--text-faint)">Each table can have a unique QR code linking to <span class="font-mono">?table=N</span> — scanning auto-selects Dine-in and pre-fills the table number on the Client Menu.</p>`;
+}
+async function toggleTable(id){ await MockAPI.toggleTable(id); renderAdminTab(); }
+
+/* ---------------- Reviews ---------------- */
+async function renderReviewsTab(container){
+  const db = await MockAPI.getAll();
+  container.innerHTML = `<div class="space-y-3">
+    ${db.reviews.map(r => { const item = db.items.find(i=>i.id===r.itemId); return `
+      <div class="rounded-2xl p-4 border flex items-start gap-3" style="background:var(--surface); border-color:var(--border);">
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-semibold">${r.customerName} <span class="font-mono text-xs" style="color:var(--text-faint)">on ${item?.name || '—'}</span></p>
+          <p class="text-xs my-1" style="color:var(--accent)">${'⭐'.repeat(r.rating)}</p>
+          <p class="text-sm" style="color:var(--text-dim)">${r.comment}</p>
+        </div>
+        <button onclick="toggleReview('${r.id}', ${!r.approved})" class="btn-press shrink-0 text-xs font-semibold px-3 py-1.5 rounded-lg" style="background:${r.approved?'rgba(74,222,128,.15)':'rgba(225,84,63,.15)'}; color:${r.approved?'var(--green)':'var(--red)'};">${r.approved ? 'Approved' : 'Hidden'}</button>
+      </div>`; }).join('')}
+  </div>`;
+}
+async function toggleReview(id, approved){ await MockAPI.toggleReview(id, approved); renderAdminTab(); }
+
+/* ---------------- Activity Log ---------------- */
+async function renderActivityTab(container){
+  const db = await MockAPI.getAll();
+  container.innerHTML = `<div class="rounded-2xl border divide-y" style="background:var(--surface); border-color:var(--border);">
+    ${db.activityLog.length === 0 ? `<p class="p-8 text-center text-sm" style="color:var(--text-faint)">No activity yet — actions across the dashboard will appear here.</p>` :
+    db.activityLog.map(a => `<div class="px-4 py-3 flex items-center justify-between gap-3" style="border-color:var(--border);">
+      <p class="text-sm">${a.text}</p><span class="font-mono text-xs shrink-0" style="color:var(--text-faint)">${new Date(a.ts).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</span>
+    </div>`).join('')}
+  </div>`;
+}
+
+/* ---------------- Settings ---------------- */
+async function renderSettingsTab(container){
+  const swatches = ['#E8A33D','#2FB8A3','#E1543F','#60A5FA','#B794F4','#4ADE80'];
+  container.innerHTML = `
+    <div class="grid lg:grid-cols-2 gap-5">
+      <div class="rounded-2xl p-5 border space-y-4" style="background:var(--surface); border-color:var(--border);">
+        <p class="text-sm font-semibold">Branding</p>
+        <div><label class="text-xs" style="color:var(--text-faint)">Restaurant Name</label><input id="setName" value="${config.restaurantName}" class="w-full mt-1 rounded-lg px-3 py-2 text-sm border" style="background:var(--surface-2); border-color:var(--border); color:var(--text);"></div>
+        <div><label class="text-xs" style="color:var(--text-faint)">Tagline</label><input id="setTagline" value="${config.tagline}" class="w-full mt-1 rounded-lg px-3 py-2 text-sm border" style="background:var(--surface-2); border-color:var(--border); color:var(--text);"></div>
+        <div><label class="text-xs" style="color:var(--text-faint)">Logo Initials</label><input id="setLogo" value="${config.logoInitials}" maxlength="3" class="w-24 mt-1 rounded-lg px-3 py-2 text-sm border font-mono" style="background:var(--surface-2); border-color:var(--border); color:var(--text);"></div>
+        <div>
+          <label class="text-xs block mb-2" style="color:var(--text-faint)">Accent Color</label>
+          <div class="flex gap-2 flex-wrap">${swatches.map(c => `<button onclick="pickAccent('${c}')" class="w-9 h-9 rounded-full border-2 btn-press" style="background:${c}; border-color:${config.colors.primary===c?'var(--text)':'transparent'};"></button>`).join('')}
+            <input id="setAccentCustom" type="color" value="${config.colors.primary}" onchange="pickAccent(this.value)" class="w-9 h-9 rounded-full border-0 bg-transparent cursor-pointer">
+          </div>
+        </div>
+        <div><label class="text-xs" style="color:var(--text-faint)">WhatsApp Number (intl, no +)</label><input id="setWA" value="${config.whatsappNumber}" class="w-full mt-1 rounded-lg px-3 py-2 text-sm border font-mono" style="background:var(--surface-2); border-color:var(--border); color:var(--text);"></div>
+      </div>
+
+      <div class="rounded-2xl p-5 border space-y-4" style="background:var(--surface); border-color:var(--border);">
+        <p class="text-sm font-semibold">Business Rules</p>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="text-xs" style="color:var(--text-faint)">Currency</label><input id="setCurrency" value="${config.currency}" class="w-full mt-1 rounded-lg px-3 py-2 text-sm border font-mono" style="background:var(--surface-2); border-color:var(--border); color:var(--text);"></div>
+          <div><label class="text-xs" style="color:var(--text-faint)">Tax Rate %</label><input id="setTax" type="number" value="${Math.round(config.taxRate*100)}" class="w-full mt-1 rounded-lg px-3 py-2 text-sm border font-mono" style="background:var(--surface-2); border-color:var(--border); color:var(--text);"></div>
+          <div><label class="text-xs" style="color:var(--text-faint)">Service Charge %</label><input id="setService" type="number" value="${Math.round(config.serviceChargeRate*100)}" class="w-full mt-1 rounded-lg px-3 py-2 text-sm border font-mono" style="background:var(--surface-2); border-color:var(--border); color:var(--text);"></div>
+          <div><label class="text-xs" style="color:var(--text-faint)">Delivery Fee</label><input id="setDeliveryFee" type="number" value="${config.deliveryFee}" class="w-full mt-1 rounded-lg px-3 py-2 text-sm border font-mono" style="background:var(--surface-2); border-color:var(--border); color:var(--text);"></div>
+          <div><label class="text-xs" style="color:var(--text-faint)">Minimum Order</label><input id="setMinOrder" type="number" value="${config.minOrder}" class="w-full mt-1 rounded-lg px-3 py-2 text-sm border font-mono" style="background:var(--surface-2); border-color:var(--border); color:var(--text);"></div>
+          <div><label class="text-xs" style="color:var(--text-faint)">Default Language</label><select id="setLang" class="w-full mt-1 rounded-lg px-3 py-2 text-sm border" style="background:var(--surface-2); border-color:var(--border); color:var(--text);"><option value="en" ${config.defaultLang==='en'?'selected':''}>English</option><option value="ar" ${config.defaultLang==='ar'?'selected':''}>العربية</option></select></div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="text-xs" style="color:var(--text-faint)">Opening Time</label><input id="setOpen" type="time" value="${config.workingHours.open}" class="w-full mt-1 rounded-lg px-3 py-2 text-sm border font-mono" style="background:var(--surface-2); border-color:var(--border); color:var(--text);"></div>
+          <div><label class="text-xs" style="color:var(--text-faint)">Closing Time</label><input id="setClose" type="time" value="${config.workingHours.close}" class="w-full mt-1 rounded-lg px-3 py-2 text-sm border font-mono" style="background:var(--surface-2); border-color:var(--border); color:var(--text);"></div>
+        </div>
+      </div>
+    </div>
+    <button onclick="saveSettingsForm()" class="btn-press mt-5 px-5 py-3 rounded-xl text-sm font-semibold" style="background:var(--accent); color:#14120F;">Save Settings</button>
+    <span id="settingsSavedMsg" class="ml-3 text-xs" style="color:var(--green)"></span>
+  `;
+}
+function pickAccent(hex){ config.colors.primary = hex; document.documentElement.style.setProperty('--accent', hex); renderSettingsTab(document.getElementById('adminContent')); }
+function saveSettingsForm(){
+  config.restaurantName = document.getElementById('setName').value.trim() || config.restaurantName;
+  config.tagline = document.getElementById('setTagline').value.trim();
+  config.logoInitials = document.getElementById('setLogo').value.trim().toUpperCase() || config.logoInitials;
+  config.whatsappNumber = document.getElementById('setWA').value.trim();
+  config.currency = document.getElementById('setCurrency').value.trim() || config.currency;
+  config.taxRate = (Number(document.getElementById('setTax').value)||0)/100;
+  config.serviceChargeRate = (Number(document.getElementById('setService').value)||0)/100;
+  config.deliveryFee = Number(document.getElementById('setDeliveryFee').value)||0;
+  config.minOrder = Number(document.getElementById('setMinOrder').value)||0;
+  config.defaultLang = document.getElementById('setLang').value;
+  config.workingHours = { open: document.getElementById('setOpen').value, close: document.getElementById('setClose').value };
+  saveSettings(); applyBranding();
+  document.getElementById('settingsSavedMsg').textContent = 'Saved ✓';
+  setTimeout(()=>{ const el = document.getElementById('settingsSavedMsg'); if(el) el.textContent=''; }, 2000);
+  miniToast('Settings saved — syncing to Client Menu');
+}
+
+/* ============================================================
+   LIVE ORDER POLLING (new-order sound + admin badge)
+============================================================= */
+let lastSeenOrderCount = null;
+setInterval(async () => {
+  if(document.getElementById('screen-admin').classList.contains('hidden')) return;
+  const orders = await MockAPI.getOrders();
+  if(lastSeenOrderCount === null){ lastSeenOrderCount = orders.length; return; }
+  if(orders.length > lastSeenOrderCount){ playBeep(); miniToast('🔔 New order received!'); if(state.adminTab==='overview'||state.adminTab==='orders') renderAdminTab(); }
+  lastSeenOrderCount = orders.length;
+}, 4000);
+
+/* ============================================================
+   INIT
+============================================================= */
+document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+document.getElementById('langBtn').textContent = currentLang === 'en' ? 'AR' : 'EN';
+applyTheme();
+applyBranding();
+const savedScreen = localStorage.getItem('menuos_demo_screen') || 'client';
+setScreen(savedScreen);
+</script>
 </body>
 </html>
