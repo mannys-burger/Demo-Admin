@@ -366,7 +366,13 @@ const SEED = {
     { id:'r2', itemId:'itm_02', customerName:'Omar K.', rating:4, comment:'Great kick of spice, will order again.', approved:true },
     { id:'r3', itemId:'itm_04', customerName:'Yara M.', rating:5, comment:'Truffle fries are addictive!', approved:false }
   ],
-  activityLog: []
+  activityLog: [],
+  expenses: [
+    { id:'e1', ts: Date.now()-86400000*2, category:'Supplies', desc:'Produce & meat delivery', amount:2400 },
+    { id:'e2', ts: Date.now()-86400000*5, category:'Utilities', desc:'Electricity bill', amount:1150 },
+    { id:'e3', ts: Date.now()-86400000*1, category:'Salaries', desc:'Weekly staff wages', amount:5200 }
+  ],
+  paymentGateway: { cashEnabled:true, cardEnabled:true, walletEnabled:true, provider:'Paymob (demo)', apiKey:'pk_test_••••••••4471', connected:true }
 };
 
 function loadDB(){
@@ -395,6 +401,11 @@ const MockAPI = {
   async addBranch(branch){ await delay(160); const db = loadDB(); db.branches.unshift(branch); saveDB(db); return {ok:true}; },
   async toggleTable(id){ await delay(100); const db = loadDB(); const tb = db.tables.find(t=>t.id===id); if(tb) tb.status = tb.status==='free' ? 'occupied' : 'free'; saveDB(db); return {ok:true}; },
   async toggleReview(id, approved){ await delay(120); const db = loadDB(); const r = db.reviews.find(r=>r.id===id); if(r) r.approved = approved; saveDB(db); return {ok:true}; },
+  async markOrderPaid(id){ await delay(150); const db = loadDB(); const o = db.orders.find(o=>o.id===id); if(o) o.paymentStatus='Paid'; saveDB(db); logActivity(`Order ${id} marked as Paid`); return {ok:true}; },
+  async refundOrder(id){ await delay(200); const db = loadDB(); const o = db.orders.find(o=>o.id===id); if(o) o.paymentStatus='Refunded'; saveDB(db); logActivity(`Order ${id} refunded (${o?fmt(o.total):''})`); return {ok:true}; },
+  async addExpense(exp){ await delay(160); const db = loadDB(); db.expenses.unshift(exp); saveDB(db); logActivity(`Expense logged: ${exp.desc} (${fmt(exp.amount)})`); return {ok:true}; },
+  async deleteExpense(id){ await delay(120); const db = loadDB(); db.expenses = db.expenses.filter(e=>e.id!==id); saveDB(db); return {ok:true}; },
+  async updateGateway(cfg){ await delay(300); const db = loadDB(); db.paymentGateway = {...db.paymentGateway, ...cfg}; saveDB(db); logActivity('Payment gateway settings updated'); return {ok:true}; },
   async getAll(){ await delay(100); return loadDB(); }
 };
 
@@ -909,7 +920,9 @@ async function confirmOrder(){
     payment: state.selectedPayment, scheduledFor: schedule,
     promoCode: appliedPromo?.code || null,
     items: state.cart.map(c => ({ name:c.name, qty:c.qty, unitPrice:c.unitPrice, optionsSummary:c.optionsSummary, isMeal:c.isMeal, mealAddon:c.mealAddon, lineTotal:c.unitPrice*c.qty+c.mealAddon })),
-    notes, ...b, total: b.total, status: 'Pending'
+    notes, ...b, total: b.total, status: 'Pending',
+    paymentStatus: state.selectedPayment === 'Cash' ? 'Unpaid' : 'Paid',
+    source: 'Client App'
   };
 
   await MockAPI.postOrder(order);
@@ -1000,6 +1013,7 @@ async function reorder(orderId){
 ============================================================= */
 const ADMIN_TABS = [
   { id:'overview', label:'Overview', icon:'📊', roles:['Admin','Cashier','Kitchen'] },
+  { id:'pos', label:'POS Terminal', icon:'🖥️', roles:['Admin','Cashier'] },
   { id:'orders', label:'Live Orders', icon:'🧾', roles:['Admin','Cashier','Kitchen'] },
   { id:'menu', label:'Menu Management', icon:'🍔', roles:['Admin'] },
   { id:'promotions', label:'Promotions', icon:'🏷️', roles:['Admin'] },
@@ -1007,6 +1021,9 @@ const ADMIN_TABS = [
   { id:'staff', label:'Staff', icon:'🧑‍🍳', roles:['Admin'] },
   { id:'branches', label:'Branches', icon:'🏬', roles:['Admin'] },
   { id:'tables', label:'Tables', icon:'🍽️', roles:['Admin','Cashier'] },
+  { id:'payments', label:'Payments', icon:'💳', roles:['Admin','Cashier'] },
+  { id:'expenses', label:'Expenses', icon:'🧮', roles:['Admin'] },
+  { id:'reports', label:'Financial Reports', icon:'📈', roles:['Admin'] },
   { id:'reviews', label:'Reviews', icon:'⭐', roles:['Admin'] },
   { id:'activity', label:'Activity Log', icon:'🕓', roles:['Admin'] },
   { id:'settings', label:'Settings', icon:'⚙️', roles:['Admin'] },
@@ -1028,7 +1045,7 @@ function renderAdminShell(){
 
   const activeTab = visible.find(v=>v.id===state.adminTab);
   document.getElementById('adminTabTitle').textContent = activeTab.label;
-  document.getElementById('adminTabSubtitle').textContent = { overview:'Performance at a glance', orders:'Track and manage incoming orders in real time', menu:'Prices, stock and availability sync instantly to the client menu', promotions:'Create and manage discount codes', customers:'Your customer relationships and loyalty tiers', staff:'Manage team members and roles', branches:'Manage multiple restaurant locations', tables:'Dine-in table status for QR ordering', reviews:'Moderate customer reviews', activity:'Full audit trail of dashboard actions', settings:'White-label branding & business configuration' }[activeTab.id] || '';
+  document.getElementById('adminTabSubtitle').textContent = { overview:'Performance at a glance', pos:'Ring up walk-in & phone orders instantly', orders:'Track and manage incoming orders in real time', menu:'Prices, stock and availability sync instantly to the client menu', promotions:'Create and manage discount codes', customers:'Your customer relationships and loyalty tiers', staff:'Manage team members and roles', branches:'Manage multiple restaurant locations', tables:'Dine-in table status for QR ordering', payments:'Track payment status and manage your payment gateway', expenses:'Log operating costs to calculate true net profit', reports:'Full financial breakdown across any date range', reviews:'Moderate customer reviews', activity:'Full audit trail of dashboard actions', settings:'White-label branding & business configuration' }[activeTab.id] || '';
 
   renderAdminTab();
 }
@@ -1037,7 +1054,7 @@ function showAdminTab(id){ state.adminTab = id; renderAdminShell(); }
 async function renderAdminTab(){
   const container = document.getElementById('adminContent');
   container.innerHTML = `<div class="py-20 text-center text-sm" style="color:var(--text-faint)">Loading…</div>`;
-  const fn = { overview:renderOverviewTab, orders:renderOrdersTab, menu:renderMenuTab, promotions:renderPromotionsTab, customers:renderCustomersTab, staff:renderStaffTab, branches:renderBranchesTab, tables:renderTablesTab, reviews:renderReviewsTab, activity:renderActivityTab, settings:renderSettingsTab }[state.adminTab];
+  const fn = { overview:renderOverviewTab, pos:renderPOSTab, orders:renderOrdersTab, menu:renderMenuTab, promotions:renderPromotionsTab, customers:renderCustomersTab, staff:renderStaffTab, branches:renderBranchesTab, tables:renderTablesTab, payments:renderPaymentsTab, expenses:renderExpensesTab, reports:renderReportsTab, reviews:renderReviewsTab, activity:renderActivityTab, settings:renderSettingsTab }[state.adminTab];
   if(fn) await fn(container);
 }
 
@@ -1160,7 +1177,7 @@ function renderOrdersTable(orders){
     <div class="overflow-x-auto"><table class="w-full text-sm min-w-[860px]">
       <thead><tr class="text-left text-[11px] font-mono uppercase tracking-wide" style="color:var(--text-faint); background:var(--surface-2);">
         <th class="px-4 py-3 font-medium">Order</th><th class="px-4 py-3 font-medium">Client</th><th class="px-4 py-3 font-medium">Type</th>
-        <th class="px-4 py-3 font-medium">Items</th><th class="px-4 py-3 font-medium">Total</th><th class="px-4 py-3 font-medium">Status</th><th class="px-4 py-3 font-medium">Actions</th>
+        <th class="px-4 py-3 font-medium">Items</th><th class="px-4 py-3 font-medium">Total</th><th class="px-4 py-3 font-medium">Payment</th><th class="px-4 py-3 font-medium">Status</th><th class="px-4 py-3 font-medium">Actions</th>
       </tr></thead>
       <tbody>
         ${orders.map(o => {
@@ -1168,12 +1185,18 @@ function renderOrdersTable(orders){
           const itemsText = o.items.map(it => `${it.qty}× ${it.name}`).join(', ');
           const nextIdx = ORDER_STATUSES.indexOf(o.status) + 1;
           const nextStatus = ['Pending','Preparing','Out for Delivery'].includes(o.status) ? ORDER_STATUSES[nextIdx] : null;
+          const payStatus = o.paymentStatus || 'Paid';
+          const payColor = payStatus==='Paid' ? 'var(--green)' : payStatus==='Refunded' ? 'var(--red)' : 'var(--accent)';
           return `<tr class="border-t align-top" style="border-color:var(--border);">
             <td class="px-4 py-3 font-mono text-xs" style="color:var(--text-dim)">${o.id}<br><span style="color:var(--text-faint)">${new Date(o.ts).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</span></td>
             <td class="px-4 py-3"><p class="text-sm font-medium">${o.customer.name}</p><p class="text-xs font-mono" style="color:var(--text-faint)">${o.customer.phone}</p></td>
             <td class="px-4 py-3 text-xs" style="color:var(--text-dim)">${o.orderType}${o.tableNumber?' · T'+o.tableNumber:''}</td>
             <td class="px-4 py-3 text-xs max-w-[220px]" style="color:var(--text-dim)">${itemsText}</td>
             <td class="px-4 py-3 font-mono text-sm font-semibold" style="color:var(--accent)">${fmt(o.total)}</td>
+            <td class="px-4 py-3">
+              <span class="status-chip px-2 py-1 rounded-md" style="background:color-mix(in srgb, ${payColor} 15%, transparent); color:${payColor};">${payStatus}</span>
+              ${payStatus==='Unpaid' ? `<button onclick="markOrderPaid('${o.id}')" class="block mt-1 text-[10px] underline" style="color:var(--text-faint)">Mark Paid</button>` : ''}
+            </td>
             <td class="px-4 py-3">
               <select onchange="setOrderStatus('${o.id}', this.value)" class="text-xs font-mono px-2 py-1.5 rounded-lg border cursor-pointer" style="background:${sc.bg}; color:${sc.fg}; border-color:transparent;">
                 ${ORDER_STATUSES.map(s => `<option value="${s}" ${s===o.status?'selected':''} style="background:var(--surface-2); color:var(--text);">${s}</option>`).join('')}
@@ -1191,6 +1214,7 @@ function renderOrdersTable(orders){
   </div>`;
 }
 async function setOrderStatus(id, status){ await MockAPI.updateOrderStatus(id, status); miniToast(`Order ${id} → ${status}`); renderAdminTab(); }
+async function markOrderPaid(id){ await MockAPI.markOrderPaid(id); miniToast('Marked as Paid'); renderAdminTab(); }
 async function cancelOrder(id){ const reason = prompt('Reason for cancellation (optional):') || ''; await MockAPI.updateOrderStatus(id, 'Cancelled', reason); renderAdminTab(); }
 function printReceipt(id){
   loadDBAsync(id);
@@ -1263,6 +1287,275 @@ async function renderMenuTab(container){
 async function toggleItem(id, active){ await MockAPI.toggleItemActive(id, active); miniToast(active?'Item activated':'Item deactivated'); renderAdminTab(); }
 async function updatePrice(id, price){ await MockAPI.updateItemPrice(id, Math.max(0, Number(price)||0)); renderAdminTab(); }
 async function updateStock(id, stock){ await MockAPI.updateItemStock(id, Math.max(0, Number(stock)||0)); renderAdminTab(); }
+
+/* ---------------- POS Terminal ---------------- */
+let posCart = [], posPayment = 'Cash', posDiscountValue = 0, posSearchQ = '', posCategory = 'all';
+async function renderPOSTab(container){
+  const menu = await MockAPI.getMenu();
+  state.items = menu.items;
+  const items = menu.items.filter(i=>i.active && i.stock>0).filter(i => (!posSearchQ || i.name.toLowerCase().includes(posSearchQ.toLowerCase())) && (posCategory==='all' || i.category===posCategory));
+  container.innerHTML = `
+    <div class="grid lg:grid-cols-5 gap-5">
+      <div class="lg:col-span-3">
+        <div class="flex gap-2 mb-3">
+          <input value="${posSearchQ}" oninput="posSearchQ=this.value; renderAdminTab()" placeholder="Search items…" class="flex-1 rounded-xl px-3.5 py-2.5 text-sm border" style="background:var(--surface-2); border-color:var(--border); color:var(--text);">
+          <select onchange="posCategory=this.value; renderAdminTab()" class="rounded-xl px-3 py-2.5 text-sm border" style="background:var(--surface-2); border-color:var(--border); color:var(--text);">
+            <option value="all" ${posCategory==='all'?'selected':''}>All Categories</option>
+            ${menu.categories.map(c=>`<option value="${c.id}" ${posCategory===c.id?'selected':''}>${c.icon} ${c.name}</option>`).join('')}
+          </select>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[560px] overflow-y-auto pr-1">
+          ${items.map(it => `
+            <button onclick="posAddItem('${it.id}')" class="btn-press text-left rounded-2xl p-3 border" style="background:var(--surface); border-color:var(--border);">
+              <p class="text-sm font-semibold line-clamp-1">${it.name}</p>
+              <p class="font-mono text-xs mt-1" style="color:var(--accent)">${fmt(it.price)}</p>
+            </button>`).join('') || `<p class="text-sm col-span-full text-center py-10" style="color:var(--text-faint)">No items found.</p>`}
+        </div>
+      </div>
+      <div class="lg:col-span-2">
+        <div class="rounded-2xl border p-4 lg:sticky lg:top-24" style="background:var(--surface); border-color:var(--border);">
+          <p class="text-sm font-semibold mb-3">Current Order <span class="font-mono text-xs" style="color:var(--text-faint)">· Walk-in</span></p>
+          <div class="space-y-2 max-h-[260px] overflow-y-auto mb-4">
+            ${posCart.length===0 ? `<p class="text-xs text-center py-8" style="color:var(--text-faint)">Tap items to add them to the order.</p>` : posCart.map(c => `
+              <div class="flex items-center justify-between gap-2 rounded-xl p-2.5" style="background:var(--surface-2);">
+                <div class="min-w-0 flex-1"><p class="text-sm truncate">${c.name}</p><p class="font-mono text-xs" style="color:var(--text-faint)">${fmt(c.price)} × ${c.qty}</p></div>
+                <div class="flex items-center gap-1.5 shrink-0">
+                  <button onclick="posChangeQty('${c.cartId}',-1)" class="qty-btn w-6 h-6 rounded-full text-xs font-bold" style="background:var(--surface-3)">–</button>
+                  <span class="font-mono text-xs w-4 text-center">${c.qty}</span>
+                  <button onclick="posChangeQty('${c.cartId}',1)" class="qty-btn w-6 h-6 rounded-full text-xs font-bold" style="background:var(--surface-3)">+</button>
+                  <button onclick="posRemove('${c.cartId}')" class="text-xs ml-1" style="color:var(--red)">✕</button>
+                </div>
+              </div>`).join('')}
+          </div>
+          <div class="mb-3"><label class="text-xs" style="color:var(--text-faint)">Manual Discount (${config.currency})</label>
+            <input type="number" value="${posDiscountValue}" oninput="posDiscountValue=Number(this.value)||0; renderPOSTotals()" class="w-full mt-1 rounded-lg px-3 py-2 text-sm border font-mono" style="background:var(--surface-2); border-color:var(--border); color:var(--text);"></div>
+          <div id="posTotals" class="space-y-1.5 mb-4 pt-3 border-t" style="border-color:var(--border);"></div>
+          <div class="mb-3">
+            <p class="text-xs mb-2" style="color:var(--text-faint)">Payment Method</p>
+            <div class="flex gap-2">${['Cash','Card','Wallet'].map(p => `<button onclick="posSetPayment('${p}')" class="btn-press flex-1 px-2 py-2 rounded-lg text-xs font-semibold border" style="${posPayment===p?'background:var(--accent);color:#14120F;border-color:var(--accent);':'background:var(--surface-2);color:var(--text-dim);border-color:var(--border);'}">${p}</button>`).join('')}</div>
+          </div>
+          <div id="posCashPanel" class="${posPayment==='Cash'?'':'hidden'} mb-3">
+            <label class="text-xs" style="color:var(--text-faint)">Amount Tendered</label>
+            <input id="posTendered" type="number" oninput="renderPOSTotals()" placeholder="0" class="w-full mt-1 rounded-lg px-3 py-2 text-sm border font-mono" style="background:var(--surface-2); border-color:var(--border); color:var(--text);">
+            <p id="posChangeDue" class="text-xs mt-1.5"></p>
+          </div>
+          <button onclick="posCompleteSale()" class="w-full rounded-2xl py-3.5 font-semibold btn-press shadow-xl" style="background:var(--accent); color:#14120F;">Complete Sale</button>
+        </div>
+      </div>
+    </div>`;
+  renderPOSTotals();
+}
+function posCartTotals(){
+  const subtotal = posCart.reduce((s,c)=>s+c.price*c.qty,0);
+  const discount = Math.min(posDiscountValue, subtotal);
+  const taxable = subtotal - discount;
+  const tax = taxable*config.taxRate, service = taxable*config.serviceChargeRate;
+  return { subtotal, discount, tax, service, total: taxable+tax+service };
+}
+function renderPOSTotals(){
+  const el = document.getElementById('posTotals'); if(!el) return;
+  const b = posCartTotals();
+  el.innerHTML = `
+    <div class="flex justify-between text-sm"><span style="color:var(--text-dim)">Subtotal</span><span class="font-mono">${fmt(b.subtotal)}</span></div>
+    ${b.discount>0?`<div class="flex justify-between text-sm"><span style="color:var(--green)">Discount</span><span class="font-mono" style="color:var(--green)">-${fmt(b.discount)}</span></div>`:''}
+    <div class="flex justify-between text-sm"><span style="color:var(--text-dim)">Tax</span><span class="font-mono">${fmt(b.tax)}</span></div>
+    <div class="flex justify-between text-sm"><span style="color:var(--text-dim)">Service</span><span class="font-mono">${fmt(b.service)}</span></div>
+    <div class="flex justify-between items-center pt-2 mt-1 border-t" style="border-color:var(--border);"><span class="text-sm font-medium">Total</span><span class="font-mono font-bold text-lg" style="color:var(--accent)">${fmt(b.total)}</span></div>`;
+  const tenderedEl = document.getElementById('posTendered'), changeEl = document.getElementById('posChangeDue');
+  if(tenderedEl && changeEl){
+    const tendered = Number(tenderedEl.value)||0, change = tendered - b.total;
+    changeEl.textContent = tendered>0 ? (change>=0 ? `Change due: ${fmt(change)}` : `Short by ${fmt(-change)}`) : '';
+    changeEl.style.color = change>=0 ? 'var(--green)' : 'var(--red)';
+  }
+}
+function posAddItem(itemId){
+  const item = state.items.find(i=>i.id===itemId); if(!item) return;
+  const existing = posCart.find(c=>c.itemId===itemId);
+  if(existing) existing.qty++; else posCart.push({cartId:uid('pos'), itemId:item.id, name:item.name, price:item.price, qty:1});
+  renderAdminTab();
+}
+function posChangeQty(cartId, d){ const line = posCart.find(c=>c.cartId===cartId); if(!line) return; line.qty = Math.max(1,line.qty+d); renderAdminTab(); }
+function posRemove(cartId){ posCart = posCart.filter(c=>c.cartId!==cartId); renderAdminTab(); }
+function posSetPayment(p){ posPayment = p; renderAdminTab(); }
+async function posCompleteSale(){
+  if(posCart.length===0){ miniToast('Add items to the order first'); return; }
+  const b = posCartTotals();
+  const order = {
+    id: uid('POS').toUpperCase(), ts: Date.now(),
+    customer: { name:'Walk-in Customer', phone:'—', address:'' }, orderType:'POS / Walk-in',
+    tableNumber:null, branch:state.activeBranch, payment:posPayment, scheduledFor:'asap', promoCode:null,
+    items: posCart.map(c=>({name:c.name, qty:c.qty, unitPrice:c.price, optionsSummary:'', isMeal:false, mealAddon:0, lineTotal:c.price*c.qty})),
+    notes:'', subtotal:b.subtotal, discount:b.discount, deliveryFee:0, tax:b.tax, service:b.service, total:b.total,
+    status:'Delivered', paymentStatus:'Paid', source:'POS Terminal'
+  };
+  await MockAPI.postOrder(order);
+  const orderId = order.id;
+  posCart = []; posDiscountValue = 0;
+  miniToast('Sale completed ✓'); renderAdminTab();
+  printReceipt(orderId);
+}
+
+/* ---------------- Payments ---------------- */
+async function renderPaymentsTab(container){
+  const [orders, db] = await Promise.all([MockAPI.getOrders(), MockAPI.getAll()]);
+  const gw = db.paymentGateway;
+  const unpaid = orders.filter(o=>o.paymentStatus==='Unpaid');
+  const paidTotal = orders.filter(o=>(o.paymentStatus||'Paid')==='Paid').reduce((s,o)=>s+o.total,0);
+  const refundedTotal = orders.filter(o=>o.paymentStatus==='Refunded').reduce((s,o)=>s+o.total,0);
+
+  container.innerHTML = `
+    <div class="grid sm:grid-cols-3 gap-4 mb-6">
+      ${statCard('Collected', fmt(paidTotal))}
+      ${statCard('Pending (COD)', fmt(unpaid.reduce((s,o)=>s+o.total,0)))}
+      ${statCard('Refunded', fmt(refundedTotal))}
+    </div>
+    <div class="rounded-2xl p-5 border mb-6" style="background:var(--surface); border-color:var(--border);">
+      <p class="text-sm font-semibold mb-4">Payment Gateway</p>
+      <div class="flex items-center gap-3 mb-3 flex-wrap">
+        <span class="status-chip px-2 py-1 rounded-md" style="background:${gw.connected?'rgba(74,222,128,.15)':'rgba(225,84,63,.15)'}; color:${gw.connected?'var(--green)':'var(--red)'};">${gw.connected?'CONNECTED':'DISCONNECTED'}</span>
+        <span class="text-sm">${gw.provider}</span><span class="font-mono text-xs" style="color:var(--text-faint)">${gw.apiKey}</span>
+      </div>
+      <div class="flex flex-wrap gap-4 mb-4">
+        <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="tgl" ${gw.cashEnabled?'checked':''} onchange="updateGatewayField('cashEnabled', this.checked)"> Cash on Delivery</label>
+        <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="tgl" ${gw.cardEnabled?'checked':''} onchange="updateGatewayField('cardEnabled', this.checked)"> Card Payments</label>
+        <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="tgl" ${gw.walletEnabled?'checked':''} onchange="updateGatewayField('walletEnabled', this.checked)"> Mobile Wallets</label>
+      </div>
+      <button onclick="testGatewayConnection()" class="btn-press px-4 py-2.5 rounded-xl text-xs font-semibold" style="background:var(--surface-2); color:var(--text-dim);">Test Connection</button>
+    </div>
+    <p class="text-sm font-semibold mb-3">Unpaid Orders (Cash on Delivery)</p>
+    ${unpaid.length===0 ? `<p class="text-sm mb-6" style="color:var(--text-faint)">Everything's settled — no pending payments.</p>` : `
+    <div class="rounded-2xl border overflow-hidden mb-6" style="background:var(--surface); border-color:var(--border);">
+      <table class="w-full text-sm"><thead><tr class="text-left text-[11px] font-mono uppercase tracking-wide" style="color:var(--text-faint); background:var(--surface-2);">
+        <th class="px-4 py-3">Order</th><th class="px-4 py-3">Customer</th><th class="px-4 py-3">Total</th><th class="px-4 py-3 text-right">Action</th></tr></thead>
+        <tbody>${unpaid.map(o=>`<tr class="border-t" style="border-color:var(--border);">
+          <td class="px-4 py-3 font-mono text-xs">${o.id}</td><td class="px-4 py-3">${o.customer.name}</td>
+          <td class="px-4 py-3 font-mono" style="color:var(--accent)">${fmt(o.total)}</td>
+          <td class="px-4 py-3 text-right"><button onclick="markOrderPaid('${o.id}')" class="btn-press text-xs font-semibold px-3 py-1.5 rounded-lg" style="background:var(--accent); color:#14120F;">Mark Paid</button></td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>`}
+    <p class="text-sm font-semibold mb-3">Recent Transactions</p>
+    <div class="rounded-2xl border overflow-hidden" style="background:var(--surface); border-color:var(--border);">
+      <table class="w-full text-sm"><thead><tr class="text-left text-[11px] font-mono uppercase tracking-wide" style="color:var(--text-faint); background:var(--surface-2);">
+        <th class="px-4 py-3">Order</th><th class="px-4 py-3">Customer</th><th class="px-4 py-3">Total</th><th class="px-4 py-3">Status</th><th class="px-4 py-3 text-right">Action</th></tr></thead>
+        <tbody>${orders.slice(0,10).map(o=>`<tr class="border-t" style="border-color:var(--border);">
+          <td class="px-4 py-3 font-mono text-xs">${o.id}</td><td class="px-4 py-3">${o.customer.name}</td>
+          <td class="px-4 py-3 font-mono">${fmt(o.total)}</td>
+          <td class="px-4 py-3"><span class="status-chip px-2 py-1 rounded-md" style="background:${o.paymentStatus==='Refunded'?'rgba(225,84,63,.15)':'rgba(74,222,128,.15)'}; color:${o.paymentStatus==='Refunded'?'var(--red)':'var(--green)'};">${o.paymentStatus||'Paid'}</span></td>
+          <td class="px-4 py-3 text-right">${o.paymentStatus!=='Refunded' ? `<button onclick="refundOrderUI('${o.id}')" class="text-xs" style="color:var(--red)">Refund</button>` : ''}</td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>`;
+}
+async function updateGatewayField(key, val){ await MockAPI.updateGateway({[key]:val}); renderAdminTab(); }
+function testGatewayConnection(){ miniToast('Testing connection…'); setTimeout(()=>miniToast('✓ Gateway connection successful'), 900); }
+async function refundOrderUI(id){ if(!confirm('Refund this order?')) return; await MockAPI.refundOrder(id); miniToast('Order refunded'); renderAdminTab(); }
+
+/* ---------------- Expenses ---------------- */
+async function renderExpensesTab(container){
+  const db = await MockAPI.getAll();
+  const total = db.expenses.reduce((s,e)=>s+e.amount,0);
+  container.innerHTML = `
+    <div class="rounded-2xl p-4 border mb-5 flex flex-wrap gap-2 items-end" style="background:var(--surface); border-color:var(--border);">
+      <div><label class="text-xs" style="color:var(--text-faint)">Description</label><input id="newExpDesc" placeholder="e.g. Gas refill" class="block rounded-lg px-3 py-2 text-sm border mt-1" style="background:var(--surface-2); border-color:var(--border); color:var(--text);"></div>
+      <div><label class="text-xs" style="color:var(--text-faint)">Category</label><select id="newExpCat" class="block rounded-lg px-3 py-2 text-sm border mt-1" style="background:var(--surface-2); border-color:var(--border); color:var(--text);"><option>Supplies</option><option>Utilities</option><option>Salaries</option><option>Rent</option><option>Marketing</option><option>Other</option></select></div>
+      <div><label class="text-xs" style="color:var(--text-faint)">Amount</label><input id="newExpAmount" type="number" placeholder="0" class="block rounded-lg px-3 py-2 text-sm border font-mono w-28 mt-1" style="background:var(--surface-2); border-color:var(--border); color:var(--text);"></div>
+      <button onclick="addExpenseForm()" class="btn-press px-4 py-2.5 rounded-lg text-sm font-semibold" style="background:var(--accent); color:#14120F;">+ Add Expense</button>
+    </div>
+    <div class="rounded-2xl p-4 border mb-5" style="background:var(--accent-soft); border-color:var(--accent);"><p class="text-sm">Total Logged Expenses: <span class="font-mono font-semibold" style="color:var(--accent)">${fmt(total)}</span></p></div>
+    <div class="rounded-2xl border overflow-hidden" style="background:var(--surface); border-color:var(--border);">
+      <table class="w-full text-sm"><thead><tr class="text-left text-[11px] font-mono uppercase tracking-wide" style="color:var(--text-faint); background:var(--surface-2);">
+        <th class="px-4 py-3">Date</th><th class="px-4 py-3">Category</th><th class="px-4 py-3">Description</th><th class="px-4 py-3">Amount</th><th class="px-4 py-3 text-right">Actions</th></tr></thead>
+        <tbody>${db.expenses.map(e=>`<tr class="border-t" style="border-color:var(--border);">
+          <td class="px-4 py-3 text-xs font-mono" style="color:var(--text-dim)">${new Date(e.ts).toLocaleDateString()}</td>
+          <td class="px-4 py-3 text-xs">${e.category}</td><td class="px-4 py-3 text-sm">${e.desc}</td>
+          <td class="px-4 py-3 font-mono" style="color:var(--red)">-${fmt(e.amount)}</td>
+          <td class="px-4 py-3 text-right"><button onclick="deleteExpenseUI('${e.id}')" class="text-xs" style="color:var(--red)">Delete</button></td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>`;
+}
+async function addExpenseForm(){
+  const desc = document.getElementById('newExpDesc').value.trim();
+  const category = document.getElementById('newExpCat').value;
+  const amount = Number(document.getElementById('newExpAmount').value)||0;
+  if(!desc || !amount) return;
+  await MockAPI.addExpense({id:uid('exp'), ts:Date.now(), category, desc, amount});
+  miniToast('Expense logged'); renderAdminTab();
+}
+async function deleteExpenseUI(id){ await MockAPI.deleteExpense(id); renderAdminTab(); }
+
+/* ---------------- Financial Reports ---------------- */
+let reportRange = '7';
+async function renderReportsTab(container){
+  const [orders, db] = await Promise.all([MockAPI.getOrders(), MockAPI.getAll()]);
+  const now = Date.now();
+  const cutoff = reportRange==='today' ? new Date().setHours(0,0,0,0) : now - Number(reportRange)*86400000;
+  const inRange = orders.filter(o=>o.ts>=cutoff);
+  const validOrders = inRange.filter(o=>o.paymentStatus!=='Refunded' && o.status!=='Cancelled');
+  const grossRevenue = validOrders.reduce((s,o)=>s+o.total,0);
+  const refunds = inRange.filter(o=>o.paymentStatus==='Refunded').reduce((s,o)=>s+o.total,0);
+  const taxCollected = validOrders.reduce((s,o)=>s+(o.tax||0),0);
+  const serviceCollected = validOrders.reduce((s,o)=>s+(o.service||0),0);
+  const expensesInRange = db.expenses.filter(e=>e.ts>=cutoff).reduce((s,e)=>s+e.amount,0);
+  const estCost = validOrders.reduce((s,o)=>s + o.items.reduce((s2,it)=>s2+it.lineTotal*0.45,0), 0);
+  const netProfit = grossRevenue - estCost - expensesInRange;
+
+  const catRevenue = {};
+  validOrders.forEach(o => o.items.forEach(it => {
+    const menuItem = db.items.find(i=>i.name===it.name);
+    const cat = menuItem ? (db.categories.find(c=>c.id===menuItem.category)?.name || 'Other') : 'Other';
+    catRevenue[cat] = (catRevenue[cat]||0) + it.lineTotal;
+  }));
+  const methodRevenue = {};
+  validOrders.forEach(o => { methodRevenue[o.payment||'Cash'] = (methodRevenue[o.payment||'Cash']||0)+o.total; });
+
+  container.innerHTML = `
+    <div class="flex items-center gap-2 mb-5 flex-wrap">
+      <select onchange="reportRange=this.value; renderAdminTab()" class="rounded-xl px-3 py-2.5 text-sm border" style="background:var(--surface-2); border-color:var(--border); color:var(--text);">
+        <option value="today" ${reportRange==='today'?'selected':''}>Today</option>
+        <option value="7" ${reportRange==='7'?'selected':''}>Last 7 Days</option>
+        <option value="30" ${reportRange==='30'?'selected':''}>Last 30 Days</option>
+        <option value="365" ${reportRange==='365'?'selected':''}>This Year</option>
+      </select>
+      <button onclick="exportReportCSV()" class="btn-press px-3.5 py-2.5 rounded-xl text-xs font-semibold border" style="background:var(--surface-2); color:var(--text-dim); border-color:var(--border);">⬇ Export Report</button>
+    </div>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+      ${statCard('Gross Revenue', fmt(grossRevenue))}
+      ${statCard('Tax Collected', fmt(taxCollected))}
+      ${statCard('Service Charge', fmt(serviceCollected))}
+      ${statCard('Refunds', fmt(refunds))}
+      ${statCard('Est. Cost of Goods', fmt(estCost))}
+      ${statCard('Expenses', fmt(expensesInRange))}
+      ${statCard('Orders', validOrders.length)}
+      ${statCard('Net Profit', fmt(netProfit))}
+    </div>
+    <div class="grid lg:grid-cols-2 gap-5">
+      <div class="rounded-2xl p-5 border" style="background:var(--surface); border-color:var(--border);">
+        <p class="text-sm font-semibold mb-4">Revenue by Category</p>
+        ${Object.keys(catRevenue).length ? Object.entries(catRevenue).sort((a,b)=>b[1]-a[1]).map(([k,v]) => `
+          <div class="mb-3"><div class="flex justify-between text-xs mb-1"><span style="color:var(--text-dim)">${k}</span><span class="font-mono">${fmt(v)}</span></div>
+          <div class="w-full h-2 rounded-full" style="background:var(--surface-3)"><div class="h-2 rounded-full" style="width:${(v/grossRevenue*100)||0}%; background:var(--accent);"></div></div></div>`).join('') : `<p class="text-xs" style="color:var(--text-faint)">No data in this range.</p>`}
+      </div>
+      <div class="rounded-2xl p-5 border" style="background:var(--surface); border-color:var(--border);">
+        <p class="text-sm font-semibold mb-4">Revenue by Payment Method</p>
+        ${Object.keys(methodRevenue).length ? Object.entries(methodRevenue).map(([k,v]) => `
+          <div class="mb-3"><div class="flex justify-between text-xs mb-1"><span style="color:var(--text-dim)">${k}</span><span class="font-mono">${fmt(v)}</span></div>
+          <div class="w-full h-2 rounded-full" style="background:var(--surface-3)"><div class="h-2 rounded-full" style="width:${(v/grossRevenue*100)||0}%; background:var(--teal);"></div></div></div>`).join('') : `<p class="text-xs" style="color:var(--text-faint)">No data in this range.</p>`}
+      </div>
+    </div>
+    <p class="text-[11px] mt-4" style="color:var(--text-faint)">Cost of goods is estimated at 45% of item price for demo purposes — connect real supplier costs per item in production.</p>`;
+}
+function exportReportCSV(){
+  MockAPI.getOrders().then(orders => {
+    const rows = [['Order ID','Date','Type','Payment Method','Payment Status','Total','Tax','Service']];
+    orders.forEach(o => rows.push([o.id, new Date(o.ts).toLocaleString(), o.orderType, o.payment||'Cash', o.paymentStatus||'Paid', o.total, o.tax||0, o.service||0]));
+    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], {type:'text/csv'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'financial-report.csv'; a.click();
+    miniToast('Report exported');
+  });
+}
 
 /* ---------------- Promotions ---------------- */
 async function renderPromotionsTab(container){
